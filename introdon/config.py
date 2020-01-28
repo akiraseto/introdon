@@ -1,4 +1,3 @@
-# SQLALCHEMY_DATABASE_URI = 'sqlite:///flask_blog.db'
 SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{user}:{password}@{host}/{db_name}'.format(**{
     'user': 'root',
     'password': 'rootroot',

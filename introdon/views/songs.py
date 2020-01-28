@@ -1,65 +1,77 @@
-from flask import render_template
+from datetime import datetime
 
-from introdon import app
+import requests
+from flask import request, redirect, flash
+
+from introdon import app, db
 from introdon.models.songs import Song
 
 
-@app.route('/songs')
+# song登録画面
+@app.route('/admin/song', methods=['POST'])
 # @login_required
-def show_songs():
-    songs = Song.query.order_by(Song.id.desc()).all()
-    return render_template('songs/index.html', songs=songs)
+def add_song():
+    term = request.form['term']
+    limit = request.form['limit']
+    attribute = request.form['attribute']
 
-# @app.route('/songs', methods=['POST'])
-# # @login_required
-# def add_song():
-#     entry = Entry(
-#         title=request.form['title'],
-#         text=request.form['text']
-#     )
-#     db.session.add(entry)
-#     db.session.commit()
-#     flash('新しく記事が作成されました')
-#     return redirect(url_for('show_songs'))
-#
-#
-# @app.route('/songs/new', methods=['GET'])
-# # @login_required
-# def new_song():
-#     return render_template('songs/new.html')
+    # api接続
+    ITUNES_URI = 'https://itunes.apple.com/search'
 
-#
-# @app.route('/entries/<int:id>', methods=['GET'])
-# @login_required
-# def show_entry(id):
-#     entry = Entry.query.get(id)
-#     return render_template('entries/show.html', entry=entry)
-#
-#
-# @app.route('/entries/<int:id>/edit', methods=['GET'])
-# @login_required
-# def edit_entry(id):
-#     entry = Entry.query.get(id)
-#     return render_template('entries/edit.html', entry=entry)
-#
-#
-# @app.route('/entries/<int:id>/update', methods=['POST'])
-# @login_required
-# def update_entry(id):
-#     entry = Entry.query.get(id)
-#     entry.title = request.form['title']
-#     entry.text = request.form['text']
-#     db.session.merge(entry)
-#     db.session.commit()
-#     flash('記事が更新されました')
-#     return redirect(url_for('show_entries'))
-#
-#
-# @app.route('/entries/<int:id>/delete', methods=['POST'])
-# @login_required
-# def delete_entry(id):
-#     entry = Entry.query.get(id)
-#     db.session.delete(entry)
-#     db.session.commit()
-#     flash('投稿が削除されました')
-#     return redirect(url_for('show_entries'))
+    params = {
+        'media': 'music',
+        'country': 'jp',
+        'lang': 'ja_jp',
+        'term': term,
+        'limit': limit,
+        'attribute': attribute
+    }
+
+    if attribute == 'all':
+        params.pop('attribute')
+
+    res = requests.get(ITUNES_URI, params)
+    _status_code = res.status_code
+    _json = res.json()
+
+    if _status_code == 200:
+        # todo:Duplicateエラーしないようにする。同じ曲をinsertしない
+        # すでに曲が登録している場合は省く
+        track_ids = []
+        for result in _json['results']:
+            track_ids.append(result['trackId'])
+
+        duplicate = Song.query.with_entities(Song.track_id).filter(Song.track_id.in_(track_ids)).all()
+        dup_track_id = []
+        for dup in duplicate:
+            dup_track_id.append(dup[0])
+        print('duplicateTrackId: ', dup_track_id)
+
+        items = []
+        for result in _json['results']:
+            if result['trackId'] not in dup_track_id:
+                dt = result['releaseDate']
+                dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+
+                item = Song(
+                    track=result['trackName'],
+                    track_id=result['trackId'],
+                    artist=result['artistName'],
+                    artist_id=result['artistId'],
+                    genre=result['primaryGenreName'],
+                    jacket_img=result['artworkUrl100'],
+                    preview=result['previewUrl'],
+                    release_date=dt
+                )
+                items.append(item)
+
+        db.session.add_all(items)
+        db.session.commit()
+
+        flash('新曲が登録されました')
+
+    else:
+        flash('楽曲の取得に失敗しました・・')
+        print('status code: ', _status_code)
+
+    return redirect('/admin/song')

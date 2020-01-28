@@ -6,7 +6,7 @@ import introdon
 from introdon.scripts.db import InitDB
 
 
-class TestFlaskBlog(unittest.TestCase):
+class TestIntroDon(unittest.TestCase):
 
     def setUp(self):
         self.db_fd, introdon.DATABASE = tempfile.mkstemp()

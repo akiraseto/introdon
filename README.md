@@ -2,18 +2,14 @@
 イントロドン:曲当てクイズ
 
 Flask
-vue.js
 nginx
 gunicorn
+(vue.js)
 
-MySQL?(Maria,posgre?)
+MySQL
 
-
-
-itunes api
+# itunes api
 https://itunes.apple.com/search?
-
-feature/initial
 
 sqlalcemmyが必要とする
 conda install pymysql
