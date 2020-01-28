@@ -1,0 +1,57 @@
+{% extends 'admin/master.html' %}
+{% import 'admin/lib.html' as lib with context %}
+{% from 'admin/lib.html' import extra with context %} {# backward compatible #}
+
+{% block head %}
+{{ super() }}
+{{ lib.form_css() }}
+{% endblock %}
+
+{% block body %}
+{% block navlinks %}
+<ul class="nav nav-tabs">
+  <li>
+    <a href="{{ return_url }}">{{ _gettext('List') }}</a>
+  </li>
+  <li class="active">
+    <a href="javascript:void(0)">{{ _gettext('Create') }}</a>
+  </li>
+</ul>
+{% endblock %}
+
+
+<!--ココに書く-->
+<h1>itunes api 曲情報取得</h1>
+
+<form action="{{ url_for('add_song') }}" class=add-entry method=post>
+
+  <div class="form-group">
+    <label for="InputTerm">Term</label>
+    <input class="form-control" id="InputTerm" name=term required type="text">
+  </div>
+
+  <!--  数字のみ-->
+  <div class="form-group">
+    <label for="InputLimit">Limit</label>
+    <input class="form-control" id="InputLimit" max="50" name=limit required type="number" value="50">
+  </div>
+
+  <!--プルダウン-->
+  <div class="form-group">
+    <label for="InputAttribute">Attribute</label>
+    <select class="form-control" id="InputAttribute" name=attribute>
+      <option value="songTerm">songTerm</option>
+      <option value="artistTerm">artistTerm</option>
+      <option value="all">all</option>
+    </select>
+  </div>
+
+  <button class="btn btn-primary" type="submit">作成</button>
+</form>
+
+{% endblock %}
+
+{% block tail %}
+{{ super() }}
+{{ lib.form_js() }}
+{% endblock %}
