@@ -6,6 +6,8 @@ from flask_admin.contrib.sqla import ModelView
 
 from introdon import app, db
 from introdon.models.entries import Entry
+from introdon.models.games import Game
+from introdon.models.logs import Log
 from introdon.models.songs import Song
 
 # todo:flask_login 導入する
@@ -15,10 +17,14 @@ from introdon.models.songs import Song
 admin = Admin(app, template_mode='bootstrap3')
 
 
-class SongModelView(ModelView):
+class MyModelView(ModelView):
+    column_display_pk = True
     page_size = 50
+
+
+class SongModelView(MyModelView):
     column_searchable_list = ['artist', 'track']
-    column_default_sort = ('modified_at', True)
+    column_default_sort = ('id', True)
 
     # def is_accessible(self):
     #     return True
@@ -30,6 +36,8 @@ class SongModelView(ModelView):
 
 
 admin.add_view(SongModelView(Song, db.session))
+admin.add_view(MyModelView(Game, db.session))
+admin.add_view(MyModelView(Log, db.session))
 admin.add_view(ModelView(Entry, db.session))
 
 

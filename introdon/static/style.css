@@ -5,3 +5,7 @@
 .introdon-body {
   padding: 1.25em;
 }
+
+* {
+  font-family: 'Mplus 1p';
+}
