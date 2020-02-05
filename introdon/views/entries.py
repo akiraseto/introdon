@@ -6,7 +6,7 @@ from introdon.models.entries import Entry
 from introdon.views.views import login_required
 
 
-@app.route('/')
+@app.route('/entries/index')
 @login_required
 def show_entries():
     entries = Entry.query.order_by(Entry.id.desc()).all()

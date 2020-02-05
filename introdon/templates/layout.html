@@ -6,12 +6,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 <link href="https://fonts.googleapis.com/earlyaccess/mplus1p.css" rel="stylesheet" type="text/css">
+<link href="https://use.fontawesome.com/releases/v5.12.0/css/all.css" rel="stylesheet">
 <link href="{{ url_for('static', filename='style.css') }}" rel=stylesheet>
-
 
 <div class="container">
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{{ url_for('show_entries') }}">Intro Don</a>
+        <a class="navbar-brand" href="{{ url_for('setting_game') }}"><i class="fas fa-microphone-alt fa-fw"></i>Intro
+            Don</a>
         <button aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
                 data-target="#navbarNav" data-toggle="collapse"
                 type="button">
@@ -25,9 +26,6 @@
                     <a class="nav-link" href="{{ url_for('login') }}">ログイン</a>
                 </li>
                 {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('new_entry') }}">新規投稿</a>
-                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a>
                 </li>

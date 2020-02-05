@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from flask_marshmallow import Marshmallow
+from flask_marshmallow.fields import fields
+
 from introdon import db
 
 
@@ -17,8 +20,7 @@ class Song(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
     modified_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
-    def __init__(self, track=None, track_id=None, artist=None, artist_id=None, genre=None, release_date=None,
-                 jacket_img=None, preview=None):
+    def __init__(self, track, track_id, artist, artist_id, jacket_img, preview, genre=None, release_date=None, ):
         self.track = track
         self.track_id = track_id
         self.artist = artist
@@ -32,3 +34,14 @@ class Song(db.Model):
 
     def __repr__(self):
         return '<Entry id:{} track:{} artist:{}>'.format(self.id, self.track, self.artist)
+
+
+ma = Marshmallow()
+
+
+class SongSchema(ma.ModelSchema):
+    class Meta:
+        model = Song
+
+    created_at = fields.DateTime('%Y-%m-%dT%H:%M:%S+09:00')
+    modified_at = fields.DateTime('%Y-%m-%dT%H:%M:%S+09:00')

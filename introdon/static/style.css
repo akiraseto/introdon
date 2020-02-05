@@ -5,3 +5,15 @@
 .introdon-body {
   padding: 1.25em;
 }
+
+* {
+  font-family: 'Mplus 1p';
+}
+
+.icon-correct {
+  color: Tomato;
+}
+
+.icon-wrong {
+  color: blue;
+}

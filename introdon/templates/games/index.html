@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+{% block body %}
+
+
+<h1>ゲームをはじめよう</h1>
+<p>ゲームのセッテイング画面になる予定</p>
+<form action="{{ url_for('start_game') }}" class=add-entry method=post>
+  <button class="btn btn-primary" type="submit">スタート</button>
+</form>
+
+
+{% endblock %}
