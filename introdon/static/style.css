@@ -9,3 +9,11 @@
 * {
   font-family: 'Mplus 1p';
 }
+
+.icon-correct {
+  color: Tomato;
+}
+
+.icon-wrong {
+  color: blue;
+}

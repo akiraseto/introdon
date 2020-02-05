@@ -1,9 +1,10 @@
 import random
 
-from flask import redirect, url_for, render_template, flash, session
+from flask import redirect, url_for, render_template, flash, session, request
 
 from introdon import app, db
 from introdon.models.games import Game
+from introdon.models.logs import Log
 from introdon.models.songs import Song, SongSchema
 
 MAX_QUESTION = 10
@@ -28,7 +29,7 @@ def start_game():
     # 登録曲が少なすぎる場合は「曲が少なくて作れません」
     if songs_count < MAX_QUESTION:
         flash('曲が少なくて作れません')
-        return render_template('games/start.html')
+        return render_template('games/index.html')
 
     else:
         # 正解を作る(id)
@@ -52,117 +53,98 @@ def start_game():
                             break
 
         # track_idで問題作る
-
         records = {}
-        song_correct = []
-        song_select = []
+        # todo:iteratorでall取得に直すqueryは1回で済む
         for i in range(MAX_QUESTION):
             song = Song.query.filter(Song.id == correct[i]).first()
             records["question" + str(i + 1) + "_correct_track_id"] = song.track_id
-            song = SongSchema().dump(song)
-            song_correct.append(song)
 
             for j in range(MAX_SELECT):
                 song = Song.query.filter(Song.id == select[i][j]).first()
                 records["question" + str(i + 1) + "_select" + str(j + 1) + "_track_id"] = song.track_id
-                song = SongSchema().dump(song)
-                song_select.append(song)
 
         this_game = Game(**records)
         db.session.add(this_game)
         db.session.commit()
 
-        # print(song_correct)
-        session.pop('correct', None)
-        print(session)
-        session['question'] = 1
+        session['num'] = 1
         session['answer'] = []
         session['judge'] = []
-        session['gameid'] = this_game.id
-        session['select'] = song_select
-        # session['correct'] = song_correct
+        session['id'] = this_game.id
+        session['correct'] = correct
+        session['select'] = select
+        session['correct_song'] = {}
 
-        flash('新しくゲームが作成されました')
+        # flash('新しくゲームが作成されました')
         return redirect(url_for('question'))
 
 
 @app.route('/game/question')
 def question():
-    print(session)
-    print('question')
+    # 10問やってるなら、resultに送る
+    if session['num'] > MAX_QUESTION:
+        return redirect(url_for('result'))
+
+    num = session['num']
     correct = session['correct']
     select = session['select']
-    gameid = session['gameid']
-    question = session['question']
-    answer = session['answer']
-    judge = session['judge']
 
-    return render_template('games/start.html')
+    song = Song.query.filter(Song.id == correct[num - 1]).first()
+    session['correct_song'] = SongSchema().dump(song)
 
-#
-# # song登録画面
-# @app.route('/admin/song', methods=['POST'])
-# # @login_required
-# def add_song():
-#     term = request.form['term']
-#     limit = request.form['limit']
-#     attribute = request.form['attribute']
-#
-#     # api接続
-#     ITUNES_URI = 'https://itunes.apple.com/search'
-#
-#     params = {
-#         'media': 'music',
-#         'country': 'jp',
-#         'lang': 'ja_jp',
-#         'term': term,
-#         'limit': limit,
-#         'attribute': attribute
-#     }
-#
-#     if attribute == 'all':
-#         params.pop('attribute')
-#
-#     res = requests.get(ITUNES_URI, params)
-#     _status_code = res.status_code
-#     _json = res.json()
-#
-#     if _status_code == 200:
-#         track_ids = []
-#         for result in _json['results']:
-#             track_ids.append(result['trackId'])
-#
-#         duplicate = Song.query.with_entities(Song.track_id).filter(Song.track_id.in_(track_ids)).all()
-#         dup_track_id = []
-#         for dup in duplicate:
-#             dup_track_id.append(dup[0])
-#         print('duplicateTrackId: ', dup_track_id)
-#
-#         items = []
-#         for result in _json['results']:
-#             if result['trackId'] not in dup_track_id:
-#                 dt = result['releaseDate']
-#                 dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
-#
-#                 item = Song(
-#                     track=result['trackName'],
-#                     track_id=result['trackId'],
-#                     artist=result['artistName'],
-#                     artist_id=result['artistId'],
-#                     genre=result['primaryGenreName'],
-#                     jacket_img=result['artworkUrl100'],
-#                     preview=result['previewUrl'],
-#                     release_date=dt
-#                 )
-#                 items.append(item)
-#
-#         db.session.add_all(items)
-#         db.session.commit()
-#
-#         flash('新曲が登録されました')
-#
-#     else:
-#         flash('楽曲の取得に失敗しました・・')
-#         print('status code: ', _status_code)
-#
-#     return redirect('/admin/song')
+    game = {
+        'num': session['num'],
+        'correct_song': session['correct_song'],
+        'select_song': Song.query.filter(Song.id.in_(select[num - 1])).all()
+    }
+
+    return render_template('games/question.html', game=game)
+
+
+@app.route('/game/answer', methods=['POST'])
+def answer():
+    # todo:リダイレクトで問題ナンバーが進んでしまうので直す
+    num = session['num']
+    answer = int(request.form['answer'])
+    session['answer'].append(answer)
+    correct = session['correct'][num - 1]
+
+    judge = 0
+    if answer == correct:
+        judge = 1
+    session['judge'].append(judge)
+
+    # logテーブルにinsertする(logは個人成績集計&発表で後々使用)
+    log = Log(
+        game_id=session['id'],
+        select_song_id=answer,
+        judge=judge,
+        question_num=num,
+        correct_song_id=correct
+    )
+    db.session.add(log)
+    db.session.commit()
+
+    game = {
+        'num': num,
+        'judge': judge,
+        'correct_song': session['correct_song'],
+    }
+
+    session['num'] += 1
+    return render_template('games/answer.html', game=game)
+
+
+@app.route('/game/result')
+def result():
+    # 結果内容
+    correct_song_list = Song.query.filter(Song.id.in_(session['correct'])).all()
+    correct_song_list = [next(s for s in correct_song_list if s.id == id) for id in session['correct']]
+
+    game = {
+        'judge': session['judge'],
+        'correct_song_list': correct_song_list,
+        'count_judge': session['judge'].count(1)
+    }
+
+    return render_template('games/result.html', game=game)
