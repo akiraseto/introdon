@@ -1,4 +1,5 @@
 import random
+from datetime import datetime
 
 from flask import redirect, url_for, render_template, flash, session, request
 
@@ -14,7 +15,6 @@ MAX_SELECT = 4
 @app.route('/')
 # @login_required
 def setting_game():
-    # todo:ここに曲の絞り込みを書く
 
     return render_template('games/index.html')
 
@@ -22,13 +22,29 @@ def setting_game():
 @app.route('/games/start', methods=['POST'])
 # @login_required
 def start_game():
-    # gameをgenerateしてDBに保存する
-    # songDBのレコード数をカウント
-    songs_count = Song.query.count()
+    # 曲の絞り込み機能
+    artist = request.form['artist']
+    artist = '%' + artist + '%'
+    genre = request.form['genre']
+    genre = '%' + genre + '%'
+    release_from = request.form['release_from']
+    release_end = request.form['release_end']
 
-    # 登録曲が少なすぎる場合は「曲が少なくて作れません」
-    if songs_count < MAX_QUESTION:
-        flash('曲が少なくて作れません')
+    release_from = datetime.strptime(release_from, '%Y')
+    release_end = datetime.strptime(release_end, '%Y')
+
+    song_instance = Song.query.with_entities(Song.id, Song.track_id).filter(Song.artist.like(artist),
+                                                                            Song.genre.like(genre),
+                                                                            Song.release_date >= release_from,
+                                                                            Song.release_date < release_end).all()
+
+    # gameをgenerateしてDBに保存する
+    # レコード数をカウント
+    songs_count = len(song_instance)
+
+    # 登録曲が少なすぎる場合
+    if songs_count < MAX_QUESTION * 4:
+        flash('該当曲が少なくて問題を作れません、範囲を広めてください。')
         return render_template('games/index.html')
 
     else:
@@ -36,32 +52,37 @@ def start_game():
         correct = []
         for i in range(MAX_QUESTION):
             while True:
-                index = random.randint(1, songs_count)
+                index = random.randint(0, songs_count - 1)
                 if index not in correct:
                     correct.append(index)
                     break
+        correct = [song_instance[i] for i in correct]
+        correct_id = [value[0] for value in correct]
+
         # 選択肢を作成(id)
-        select = [[0 for i in range(4)] for j in range(10)]
+        select = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
+        select_id = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
+
         for i in range(MAX_QUESTION):
-            select[i][random.randint(0, MAX_SELECT - 1)] = correct[i]
+            rand_index = random.randint(0, MAX_SELECT - 1)
+            select[i][rand_index] = correct[i]
+            select_id[i][rand_index] = correct[i][0]
             for j in range(MAX_SELECT):
                 if select[i][j] == 0:
                     while True:
-                        index = random.randint(1, songs_count)
+                        index = song_instance[random.randint(0, songs_count - 1)]
                         if index not in select[i]:
                             select[i][j] = index
+                            select_id[i][j] = index[0]
+
                             break
 
-        # track_idで問題作る
+        # track_idにしてGame tableに保存
         records = {}
-        # todo:iteratorでall取得に直すqueryは1回で済む
         for i in range(MAX_QUESTION):
-            song = Song.query.filter(Song.id == correct[i]).first()
-            records["question" + str(i + 1) + "_correct_track_id"] = song.track_id
-
+            records["question" + str(i + 1) + "_correct_track_id"] = correct[i][1]
             for j in range(MAX_SELECT):
-                song = Song.query.filter(Song.id == select[i][j]).first()
-                records["question" + str(i + 1) + "_select" + str(j + 1) + "_track_id"] = song.track_id
+                records["question" + str(i + 1) + "_select" + str(j + 1) + "_track_id"] = select[i][j][1]
 
         this_game = Game(**records)
         db.session.add(this_game)
@@ -71,11 +92,10 @@ def start_game():
         session['answer'] = []
         session['judge'] = []
         session['id'] = this_game.id
-        session['correct'] = correct
-        session['select'] = select
+        session['correct'] = correct_id
+        session['select'] = select_id
         session['correct_song'] = {}
 
-        # flash('新しくゲームが作成されました')
         return redirect(url_for('question'))
 
 

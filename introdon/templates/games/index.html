@@ -3,8 +3,44 @@
 
 
 <h1>ゲームをはじめよう</h1>
-<p>ゲームのセッテイング画面になる予定</p>
-<form action="{{ url_for('start_game') }}" class=add-entry method=post>
+<p>曲を絞り込む</p>
+<form action="{{ url_for('start_game') }}" method=post>
+
+  <div class="form-group">
+    <label for="inputArtist">アーティスト</label>
+    <input class="form-control" id="inputArtist" name="artist" placeholder="特定しない" type="text">
+
+    <label for="inputGenre">ジャンル</label>
+    <input class="form-control" id="inputGenre" name="genre" placeholder="特定しない" type="text">
+  </div>
+
+  <label for="InputRealse1">年代</label>
+  <div class="form-group form-inline" id="InputRealse1">
+    <select class="form-control" name="release_from">
+      <option selected value="1900">特定しない</option>
+      <option value="1960">1960</option>
+      <option value="1970">1970</option>
+      <option value="1980">1980</option>
+      <option value="1990">1990</option>
+      <option value="2000">2000</option>
+      <option value="2010">2010</option>
+      <option value="2020">2020</option>
+    </select>
+    <i class="fas fa-long-arrow-alt-right fa-fw fa-2x"></i>
+    <select class="form-control" id="InputRealse2" name="release_end">
+      <option selected value="2100">特定しない</option>
+      <option value="1960">1960</option>
+      <option value="1970">1970</option>
+      <option value="1980">1980</option>
+      <option value="1990">1990</option>
+      <option value="2000">2000</option>
+      <option value="2010">2010</option>
+      <option value="2020">2020</option>
+    </select>
+
+  </div>
+
+
   <button class="btn btn-primary" type="submit">スタート</button>
 </form>
 
