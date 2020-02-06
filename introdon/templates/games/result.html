@@ -2,6 +2,7 @@
 {% block body %}
 
 <div class="container text-center">
+
   <p>結果発表</p>
   <h1 class="display-4">正解数 {{game.count_judge}} /10問</h1>
 
@@ -9,8 +10,9 @@
     {% for song in game.correct_song_list %}
     <div class="col-md-3 pb-2">
       <div class="card h-100">
-        <p>第{{loop.index}}問</p>
-        <span class="align-items-center justify-content-center">
+        <button class="h-100 border-none" onclick=sound("{{song.preview}}")>
+          <p>第{{loop.index}}問</p>
+          <span class="align-items-center justify-content-center">
           {% if game.judge[loop.index -1] == 1 %}
           <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
           {% else %}
@@ -18,11 +20,12 @@
           {% endif %}
         </span>
 
-        <div class="card-body">
-          <p>{{ song.artist }}</p>
-          <p>{{ song.track }}</p>
-          <img alt="jacket_img" class="rounded float-center" src="{{song.jacket_img}}">
-        </div>
+          <div class="card-body">
+            <p>{{ song.artist }}</p>
+            <p>{{ song.track }}</p>
+            <img alt="jacket_img" class="rounded float-center" src="{{song.jacket_img}}">
+          </div>
+        </button>
       </div>
     </div>
     {% endfor %}
@@ -34,6 +37,23 @@
   <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'" type=“button”>やめる
   </button>
 </div>
+
+
+<script type="text/javascript">
+  var audios = [];
+
+  function sound(track) {
+    for (var i = 0; i < audios.length; i++) {
+      audios[i].pause();
+    }
+
+    var audio = new Audio(track + "#t=1,11");
+    audio.play();
+    this.blur();
+    audios = [];
+    audios.push(audio);
+  }
+</script>
 
 
 {% endblock %}

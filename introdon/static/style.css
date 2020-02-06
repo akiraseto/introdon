@@ -17,3 +17,7 @@
 .icon-wrong {
   color: blue;
 }
+
+.border-none {
+  border: none
+}

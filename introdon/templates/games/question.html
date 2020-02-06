@@ -10,7 +10,7 @@
       {% for select in game['select_song'] %}
       <div class="col-md-3 mx-auto">
         <div class="card h-100">
-          <button class="h-100" name="answer" value="{{ select.id }}">
+          <button class="h-100 border-none" name="answer" value="{{ select.id }}">
             <div class="card-body">
               <h5>{{ select.artist }}</h5>
               <h5>{{ select.track}}</h5>
@@ -27,7 +27,7 @@
 
 <script type="text/javascript">
   $(document).ready(function () {
-    var audio = new Audio("{{game['correct_song'].preview}}#t=0,5.5");
+    var audio = new Audio("{{game['correct_song'].preview}}#t=1,6.5");
     audio.play();
     this.blur();
   }, false);
