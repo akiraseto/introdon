@@ -3,15 +3,46 @@ from functools import wraps
 from flask import request, redirect, url_for, render_template, flash, session
 from flask_admin import Admin, expose
 from flask_admin.contrib.sqla import ModelView
+from flask_login import LoginManager
 
 from introdon import app, db
 from introdon.models.entries import Entry
 from introdon.models.games import Game
 from introdon.models.logs import Log
 from introdon.models.songs import Song
+from introdon.models.users import User
 
-# todo:flask_login 導入する
 # todo:flask_loginで 管理画面に権限付与する
+
+# flask_login設定
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+
+# login_viewのrouteを設定
+# login_manager.login_view = "users.login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(user_id)
+
+
+# todo:必ず消す
+# @app.route('/login')
+# def login():
+#     user = User.query.filter_by(id=1).first()
+#
+#     login_user(user)
+#
+#     return redirect(url_for('secret'))
+#
+#
+# @app.route('/logout')
+# @login_required
+# def logout():
+#     logout_user()
+#     return redirect(url_for('index'))
+
 
 # 管理画面
 admin = Admin(app, template_mode='bootstrap3')
@@ -38,7 +69,12 @@ class SongModelView(MyModelView):
 admin.add_view(SongModelView(Song, db.session))
 admin.add_view(MyModelView(Game, db.session))
 admin.add_view(MyModelView(Log, db.session))
+admin.add_view(MyModelView(User, db.session))
 admin.add_view(ModelView(Entry, db.session))
+
+
+
+
 
 
 def login_required(view):

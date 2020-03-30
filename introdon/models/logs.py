@@ -6,6 +6,7 @@ from introdon import db
 class Log(db.Model):
     __tablename__ = 'logs'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer)
     game_id = db.Column(db.Integer, nullable=False)
     question_num = db.Column(db.Integer, nullable=False)
     judge = db.Column(db.Integer, nullable=False)
@@ -13,7 +14,8 @@ class Log(db.Model):
     select_song_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
-    def __init__(self, game_id, question_num, judge, correct_song_id, select_song_id):
+    def __init__(self, game_id, question_num, judge, correct_song_id, select_song_id, user_id=None):
+        self.user_id = user_id
         self.game_id = game_id
         self.question_num = question_num
         self.judge = judge

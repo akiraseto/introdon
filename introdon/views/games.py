@@ -12,14 +12,13 @@ MAX_QUESTION = 10
 MAX_SELECT = 4
 
 
-@app.route('/')
+@app.route('/game/setting')
 # @login_required
 def setting_game():
+    return render_template('games/setting.html')
 
-    return render_template('games/index.html')
 
-
-@app.route('/games/start', methods=['POST'])
+@app.route('/game/start', methods=['POST'])
 # @login_required
 def start_game():
     # 曲の絞り込み機能
@@ -45,7 +44,7 @@ def start_game():
     # 登録曲が少なすぎる場合
     if songs_count < MAX_QUESTION * 4:
         flash('該当曲が少なくて問題を作れません、範囲を広めてください。')
-        return render_template('games/index.html')
+        return render_template('games/setting.html')
 
     else:
         # 正解を作る(id)

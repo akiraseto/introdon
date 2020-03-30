@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<div class="container text-center">
+  entrance
+
+  <h1 class="display-2">クイズ! Intro Don!!</h1>
+
+
+  <p>ゲームするボタン</p>
+  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'" type=“button”>やめる</button>
+
+
+  <p>これまでの成績表</p>
+  <p>ゲーム回数</p>
+  <p>答えた問題数</p>
+  <p>正解回数</p>
+  <p>正解率</p>
+
+
+</div>
+{% endblock %}
