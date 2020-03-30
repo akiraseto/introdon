@@ -2,21 +2,36 @@
 {% block body %}
 
 <div class="container text-center">
-  entrance
-
-  <h1 class="display-2">クイズ! Intro Don!!</h1>
+  <h1 class="display-3">クイズ! Intro Don!!</h1>
 
 
-  <p>ゲームするボタン</p>
-  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'" type=“button”>やめる</button>
+  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'" type=“button”>
+    ゲーム開始
+  </button>
 
 
-  <p>これまでの成績表</p>
-  <p>ゲーム回数</p>
-  <p>答えた問題数</p>
-  <p>正解回数</p>
-  <p>正解率</p>
-
+  <p>{{user['name']}}</p>
+  <table class="table">
+    <tr>
+      <th colspan="3">成績</th>
+    </tr>
+    <tr>
+      <td>ゲーム回数</td>
+      <td>*後で追加</td>
+    </tr>
+    <tr>
+      <td>合計問題数</td>
+      <td>{{user['sum_answer']}}</td>
+    </tr>
+    <tr>
+      <td>合計正解数</td>
+      <td>{{user['sum_correct']}}</td>
+    </tr>
+    <tr>
+      <td>正解率</td>
+      <td>{{user['rate']}}</td>
+    </tr>
+  </table>
 
 </div>
 {% endblock %}

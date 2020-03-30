@@ -13,17 +13,15 @@ class User(UserMixin, db.Model):
     admin = db.Column(db.Boolean)
     sum_answer = db.Column(db.Integer)
     sum_correct = db.Column(db.Integer)
-    rate = db.Column(db.Float)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
     modified_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
-    def __init__(self, username, password, admin=None, sum_answer=None, sum_correct=None, rate=None):
+    def __init__(self, username, password, admin=0, sum_answer=0, sum_correct=0):
         self.username = username
         self.password = password
         self.admin = admin
         self.sum_answer = sum_answer
         self.sum_correct = sum_correct
-        self.rate = rate
         self.created_at = datetime.now()
         self.modified_at = datetime.now()
 

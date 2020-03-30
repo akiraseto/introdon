@@ -1,5 +1,5 @@
 from flask import redirect, url_for, render_template, flash, request
-from flask_login import login_user, login_required, current_user
+from flask_login import login_user, logout_user, login_required, current_user
 from flask_wtf import FlaskForm
 from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms import StringField, PasswordField
@@ -24,6 +24,10 @@ class UserForm(FlaskForm):
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    # ログイン済み
+    if current_user.is_authenticated:
+        return redirect(url_for('entrance'))
+
     # ユーザーログイン
     form = UserForm()
     if form.validate_on_submit() and request.method == 'POST':
@@ -79,11 +83,25 @@ def create_user():
 @app.route('/user/entrance')
 @login_required
 def entrance():
-    # todo:成績表つくる
+    # todo:後でゲーム回数も作って追加
 
-    print(current_user.username)
-    print(current_user.sum_answer)
-    print(current_user.sum_correct)
-    print(current_user.rate)
+    try:
+        rate = round(current_user.sum_correct / current_user.sum_answer, 2)
+    except Exception as e:
+        rate = 0
 
-    return render_template('users/entrance.html')
+    user = {
+        'name': current_user.username,
+        'sum_answer': current_user.sum_answer,
+        'sum_correct': current_user.sum_correct,
+        'rate': rate
+    }
+
+    return render_template('users/entrance.html', user=user)
+
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('ログアウトしました')
+    return redirect(url_for('index'))
