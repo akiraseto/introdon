@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 
 from flask import redirect, url_for, render_template, flash, session, request
+from flask_login import current_user
 
 from introdon import app, db
 from introdon.models.games import Game
@@ -12,15 +13,12 @@ MAX_QUESTION = 10
 MAX_SELECT = 4
 
 
-@app.route('/')
-# @login_required
+@app.route('/game/setting')
 def setting_game():
+    return render_template('games/setting.html')
 
-    return render_template('games/index.html')
 
-
-@app.route('/games/start', methods=['POST'])
-# @login_required
+@app.route('/game/start', methods=['POST'])
 def start_game():
     # 曲の絞り込み機能
     artist = request.form['artist']
@@ -45,7 +43,7 @@ def start_game():
     # 登録曲が少なすぎる場合
     if songs_count < MAX_QUESTION * 4:
         flash('該当曲が少なくて問題を作れません、範囲を広めてください。')
-        return render_template('games/index.html')
+        return render_template('games/setting.html')
 
     else:
         # 正解を作る(id)
@@ -134,8 +132,14 @@ def answer():
         judge = 1
     session['judge'].append(judge)
 
-    # logテーブルにinsertする(logは個人成績集計&発表で後々使用)
+    # Logにinsert
+    if current_user.is_authenticated:
+        user_id = current_user.id
+    else:
+        user_id = None
+
     log = Log(
+        user_id=user_id,
         game_id=session['id'],
         select_song_id=answer,
         judge=judge,

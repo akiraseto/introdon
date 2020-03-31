@@ -66,6 +66,8 @@ class Game(db.Model):
     question10_select3_track_id = db.Column(db.Integer, nullable=False)
     question10_select4_track_id = db.Column(db.Integer, nullable=False)
 
+    user_id = db.Column(db.Integer)
+
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
     def __init__(self,
@@ -119,6 +121,7 @@ class Game(db.Model):
                  question10_select2_track_id,
                  question10_select3_track_id,
                  question10_select4_track_id,
+                 user_id=None
                  ):
         self.question1_correct_track_id = question1_correct_track_id
         self.question1_select1_track_id = question1_select1_track_id
@@ -170,6 +173,8 @@ class Game(db.Model):
         self.question10_select2_track_id = question10_select2_track_id
         self.question10_select3_track_id = question10_select3_track_id
         self.question10_select4_track_id = question10_select4_track_id
+
+        self.user_id = user_id
 
         self.created_at = datetime.now()
 
