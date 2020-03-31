@@ -1,3 +1,5 @@
+import os
+
 SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{user}:{password}@{host}/{db_name}'.format(**{
     'user': 'root',
     'password': 'rootroot',
@@ -7,6 +9,4 @@ SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{user}:{password}@{host}/{db_name}'.f
 
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 DEBUG = True
-SECRET_KEY = 'secret_key'
-USERNAME = 'hoge'
-PASSWORD = 'hoge'
+SECRET_KEY = os.urandom(24)

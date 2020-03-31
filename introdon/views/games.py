@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 
 from flask import redirect, url_for, render_template, flash, session, request
+from flask_login import current_user
 
 from introdon import app, db
 from introdon.models.games import Game
@@ -13,13 +14,11 @@ MAX_SELECT = 4
 
 
 @app.route('/game/setting')
-# @login_required
 def setting_game():
     return render_template('games/setting.html')
 
 
 @app.route('/game/start', methods=['POST'])
-# @login_required
 def start_game():
     # 曲の絞り込み機能
     artist = request.form['artist']
@@ -133,8 +132,14 @@ def answer():
         judge = 1
     session['judge'].append(judge)
 
-    # logテーブルにinsertする(logは個人成績集計&発表で後々使用)
+    # Logにinsert
+    if current_user.is_authenticated:
+        user_id = current_user.id
+    else:
+        user_id = None
+
     log = Log(
+        user_id=user_id,
         game_id=session['id'],
         select_song_id=answer,
         judge=judge,

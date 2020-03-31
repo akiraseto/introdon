@@ -5,7 +5,6 @@ from flask_admin.form import SecureForm
 from flask_login import LoginManager, current_user
 
 from introdon import app, db
-from introdon.models.entries import Entry
 from introdon.models.games import Game
 from introdon.models.logs import Log
 from introdon.models.songs import Song
@@ -14,7 +13,6 @@ from introdon.models.users import User
 # flask_login設定
 login_manager = LoginManager()
 login_manager.init_app(app)
-
 
 # login_viewのrouteを設定
 # login_manager.login_view = "users.login"
@@ -25,11 +23,10 @@ def load_user(user_id):
 
 
 # 管理画面
-
 class MyAdminIndexView(AdminIndexView):
     def is_accessible(self):
-        if hasattr(current_user, 'admin'):
-            return current_user.admin and current_user.is_authenticated
+        if current_user.is_authenticated:
+            return current_user.admin
         else:
             return False
 
@@ -44,8 +41,8 @@ class MyModelView(ModelView):
     form_base_class = SecureForm
 
     def is_accessible(self):
-        if hasattr(current_user, 'admin'):
-            return current_user.admin and current_user.is_authenticated
+        if current_user.is_authenticated:
+            return current_user.admin
         else:
             return False
 
@@ -82,7 +79,6 @@ admin.add_view(SongModelView(Song, db.session))
 admin.add_view(MyModelView(Game, db.session))
 admin.add_view(MyModelView(Log, db.session))
 admin.add_view(UserModelView(User, db.session))
-admin.add_view(ModelView(Entry, db.session))
 admin.add_view(
     IntroLinkView(name='IntroDon', endpoint='introdon', menu_icon_type='glyph', menu_icon_value='glyphicon-home'))
 

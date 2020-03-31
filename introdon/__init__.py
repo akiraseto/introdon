@@ -6,4 +6,4 @@ app.config.from_object('introdon.config')
 
 db = SQLAlchemy(app)
 
-from introdon.views import views, entries, songs, games, users
+from introdon.views import views, songs, games, users

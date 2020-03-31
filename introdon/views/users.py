@@ -6,6 +6,7 @@ from wtforms import StringField, PasswordField
 from wtforms.validators import InputRequired, Length, Regexp
 
 from introdon import app, db
+from introdon.models.logs import Log
 from introdon.models.users import User
 
 
@@ -83,19 +84,33 @@ def create_user():
 @app.route('/user/entrance')
 @login_required
 def entrance():
-    # todo:後でゲーム回数も作って追加
+    # logからquery
+    log = Log.query.filter(Log.user_id == current_user.id).all()
+    sum_answer = len(log)
+    sum_correct = [value.judge for value in log].count(1)
+    sum_game = [value.question_num for value in log].count(10)
 
     try:
-        rate = round(current_user.sum_correct / current_user.sum_answer, 2)
+        rate = round(sum_correct / sum_answer, 2)
     except Exception as e:
         rate = 0
 
     user = {
         'name': current_user.username,
-        'sum_answer': current_user.sum_answer,
-        'sum_correct': current_user.sum_correct,
+        'sum_game': sum_game,
+        'sum_answer': sum_answer,
+        'sum_correct': sum_correct,
         'rate': rate
     }
+
+    # user成績を更新
+    update_user = User.query.filter(User.id == current_user.id).first()
+    update_user.sum_game = sum_game
+    update_user.sum_answer = sum_answer
+    update_user.sum_correct = sum_correct
+    update_user.rate = rate
+    db.session.add(update_user)
+    db.session.commit()
 
     return render_template('users/entrance.html', user=user)
 

@@ -9,7 +9,6 @@ from introdon.models.songs import Song
 
 # song登録画面
 @app.route('/admin/song', methods=['POST'])
-# @login_required
 def add_song():
     term = request.form['term']
     limit = request.form['limit']
