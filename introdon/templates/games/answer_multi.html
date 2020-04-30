@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+{% block body %}
+
+  multi
+
+  <div class="container text-center">
+    <h1 class="display-4">第{{ game['num'] }}問 /10</h1>
+
+    <div class="row">
+      <div class="col-md-6 mx-auto">
+
+        <span class="align-items-center justify-content-center">
+          {% if game.judge == 1 %}
+            <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+          {% else %}
+            <i class="fas fa-times fa-5x fa-fw icon-blue icon-wrong"></i>
+          {% endif %}
+        </span>
+
+        <p>正解は</p>
+        <div class="card">
+          <div class="card-body">
+            <h5>{{ game.correct_song.artist }}</h5>
+            <h5>{{ game.correct_song.track }}</h5>
+            <img alt="jacket_img" class="img-thumbnail" src="{{ game.correct_song.jacket_img }}">
+          </div>
+        </div>
+
+        <div>
+
+          {% if game['num'] == 10 %}
+            <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('result_multi') }}'"
+                    type=“button”>
+              結果発表
+            </button>
+
+          {% else %}
+            <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('question_multi') }}'"
+                    type=“button”>
+              次の問題へ
+            </button>
+
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <script type="text/javascript">
+    $(document).ready(function () {
+      var audio = new Audio("{{game['correct_song'].preview}}#t=1,6.5");
+      audio.play();
+      this.blur();
+    }, false);
+  </script>
+{% endblock %}
