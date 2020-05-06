@@ -89,6 +89,7 @@ def entrance():
     sum_answer = len(log)
     sum_correct = [value.judge for value in log].count(1)
     sum_game = [value.question_num for value in log].count(10)
+    total_score = sum([value.score for value in log])
 
     try:
         rate = round(sum_correct / sum_answer, 2)
@@ -100,7 +101,8 @@ def entrance():
         'sum_game': sum_game,
         'sum_answer': sum_answer,
         'sum_correct': sum_correct,
-        'rate': rate
+        'rate': rate,
+        'total_score': total_score
     }
 
     # user成績を更新

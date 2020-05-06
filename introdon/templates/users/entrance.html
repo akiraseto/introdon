@@ -14,28 +14,32 @@
     </button>
 
 
-    <p>{{ user['name'] }}</p>
+    <p>{{ user.name }}</p>
     <table class="table">
       <tr>
         <th colspan="3">成績</th>
       </tr>
       <tr>
-        <td>ゲーム回数</td>
-        <td>{{ user['sum_game'] }}</td>
+        <td>参加ゲーム数</td>
+        <td>{{ user.sum_game }}</td>
       </tr>
       <tr>
-        <td>合計問題数</td>
-        <td>{{ user['sum_answer'] }}</td>
+        <td>合計回答数</td>
+        <td>{{ user.sum_answer }}</td>
       </tr>
       <tr>
         <td>合計正解数</td>
-        <td>{{ user['sum_correct'] }}</td>
+        <td>{{ user.sum_correct }}</td>
       </tr>
-    <tr>
-      <td>正解率</td>
-      <td>{{user['rate']}}</td>
-    </tr>
-  </table>
+      <tr>
+        <td>総獲得スコア</td>
+        <td>{{ user.total_score }}</td>
+      </tr>
+      <tr>
+        <td>正解率</td>
+        <td>{{ user.rate }}</td>
+      </tr>
+    </table>
 
-</div>
+  </div>
 {% endblock %}

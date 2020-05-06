@@ -452,11 +452,17 @@ def record_log():
     else:
         user_id = None
 
+    # scoreをlogに追加する
+    score = 0
+    if answer == correct:
+        score = 10
+
     log = Log(
         user_id=user_id,
         game_id=session['id'],
         select_song_id=answer,
         judge=judge,
+        score=score,
         question_num=num,
         correct_song_id=correct
     )
