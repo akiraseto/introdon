@@ -1,12 +1,13 @@
 {% extends "layout.html" %}
 {% block body %}
 
-  multi
+  <h3>みんなと遊ぶ</h3>
 
   <div class="container text-center">
     <h1 class="display-4">第{{ game['num'] }}問 /10</h1>
+    <h2>あと<span id="countDown"></span>秒</h2>
 
-    <form action="{{ url_for('answer_multi') }}" class="" method=post>
+    <form action="{{ url_for('record_log_multi') }}" class="" method=post>
       <div class="row px-5">
 
         {% for select in game['select_song'] %}
@@ -22,6 +23,8 @@
           </div>
         {% endfor %}
 
+        <button class="timeOverBtn" name="answer" value="0" style="display: none;"></button>
+
       </div>
     </form>
 
@@ -29,11 +32,31 @@
 
   <script type="text/javascript">
     $(document).ready(function () {
-      var audio = new Audio("{{game['correct_song'].preview}}#t=1,6.5");
+      const audio = new Audio("{{game['correct_song'].preview}}#t=3,13");
       audio.play();
-      this.blur();
+
+      const display_time = {{ game.DISPLAY_TIME }};
+      const limit_time = {{ game.limit_time}};
+      let jump = false;
+
+      (function loop() {
+        const now = Math.floor(Date.now() / 1000);
+        const remained_time = Math.floor(limit_time - now, 0);
+
+
+        if (remained_time > -1) {
+          console.log(remained_time);
+          $("#countDown").text(remained_time);
+
+        } else if (remained_time <= display_time * -1 && !jump) {
+          jump = true;
+          $(".timeOverBtn").click();
+        }
+
+        setTimeout(loop, 100);
+      })();
+
     }, false);
 
   </script>
-
 {% endblock %}

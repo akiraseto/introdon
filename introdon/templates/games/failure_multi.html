@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block body %}
+
+  <h1>ゲーム不成立..</h1>
+  <h2>誰もゲームに参加しませんでした。</h2>
+
+  <div>
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_multi') }}'" type=“button”>
+      もう一度遊ぶ
+    </button>
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'" type=“button”>やめる
+    </button>
+
+  </div>
+
+
+{% endblock %}

@@ -74,16 +74,15 @@
 
 
   <script type="text/javascript">
-    var audios = [];
+    let audios = [];
 
     function sound(track) {
-      for (var i = 0; i < audios.length; i++) {
+      for (let i = 0; i < audios.length; i++) {
         audios[i].pause();
       }
 
-      var audio = new Audio(track + "#t=1,11");
+      const audio = new Audio(track + "#t=2,30");
       audio.play();
-      this.blur();
       audios = [];
       audios.push(audio);
     }

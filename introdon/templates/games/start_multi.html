@@ -1,13 +1,12 @@
 {% extends "layout.html" %}
 {% block body %}
-  <p>multi</p>
-  {{ game.game_id }}
 
 
   <h1>メンバー受付中</h1>
+  <h2>ゲームID: {{ game.game_id }}</h2>
 
   <div id="wrap_join">
-    <p id="text_limit">締め切りまであと<span id="countDown"></span>秒</p>
+    <h3 id="text_limit">締め切りまであと<span id="countDown"></span>秒</h3>
     <p id="text_join">あそぶメンバー</p>
     <div id="list_member">
       <ul>
@@ -19,14 +18,13 @@
 
   <script type="text/javascript">
     let ready = $(document).ready(function () {
-      var start_display_time = {{ game.START_DISPLAY_TIME }};
-      var limit_time = {{ game.limit_time}};
-      var jump = false;
-
+      const display_time = {{ game.DISPLAY_TIME }};
+      const limit_time = {{ game.limit_time}};
+      let jump = false;
 
       function update() {
         $.getJSON('get', function (game) {
-          var html = '<ul>', i, j, id;
+          let html = '<ul>', i, j, id;
           for (i = 1; i < 5 && (id = game['game']['Game']['entry_user' + i]) !== null; i++) {
             for (j = 0; j < game['users'].length; j++) {
               if (game['users'][j]['User']['id'] === id) {
@@ -41,13 +39,13 @@
 
 
       (function loop() {
-        var now = Math.floor(Date.now() / 1000);
-        var remained_time = Math.floor(limit_time - now, 0);
-
-        console.log(remained_time);
+        const now = Math.floor(Date.now() / 1000);
+        const remained_time = Math.floor(limit_time - now, 0);
 
         if (remained_time > -1) {
+          console.log(remained_time);
           $("#countDown").text(remained_time);
+
           // update();
 
           // if (remained_time <= 0) {
@@ -56,7 +54,7 @@
           //   $("#wrap_join #list_member").hide();
           // }
 
-        } else if (remained_time === start_display_time * -1 && !jump) {
+        } else if (remained_time === display_time * -1 && !jump) {
           jump = true;
           location.href = "{{ url_for('question_multi') }}";
         }

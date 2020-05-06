@@ -38,21 +38,20 @@
 </div>
 
 
-<script type="text/javascript">
-  var audios = [];
+  <script type="text/javascript">
+    let audios = [];
 
-  function sound(track) {
-    for (var i = 0; i < audios.length; i++) {
-      audios[i].pause();
+    function sound(track) {
+      for (let i = 0; i < audios.length; i++) {
+        audios[i].pause();
+      }
+
+      const audio = new Audio(track + "#t=3,30");
+      audio.play();
+      audios = [];
+      audios.push(audio);
     }
-
-    var audio = new Audio(track + "#t=1,11");
-    audio.play();
-    this.blur();
-    audios = [];
-    audios.push(audio);
-  }
-</script>
+  </script>
 
 
 {% endblock %}

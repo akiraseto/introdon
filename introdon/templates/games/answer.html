@@ -45,11 +45,10 @@
 </div>
 
 
-<script type="text/javascript">
-  $(document).ready(function () {
-    var audio = new Audio("{{game['correct_song'].preview}}#t=1,6.5");
-    audio.play();
-    this.blur();
-  }, false);
-</script>
+  <script type="text/javascript">
+    $(document).ready(function () {
+      const audio = new Audio("{{game['correct_song'].preview}}#t=3,30");
+      audio.play();
+    }, false);
+  </script>
 {% endblock %}

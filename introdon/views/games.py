@@ -3,7 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from flask import redirect, url_for, render_template, flash, session, request
-from flask_login import current_user
+from flask_login import current_user, login_required
 
 from introdon import app, db
 from introdon.models.games import Game
@@ -13,17 +13,15 @@ from introdon.models.users import User
 
 MAX_QUESTION = 10
 MAX_SELECT = 4
-# START_WAITING_TIME = 60
+# START_WAITING_TIME = 30
 START_WAITING_TIME = 10
-START_DISPLAY_TIME = 2
-
-
-@app.route('/game/setting')
-def setting_game():
-    return render_template('games/setting.html')
+DISPLAY_TIME = 2
+QUESTION_TIME = 10
+ANSWER_TIME = 7
 
 
 @app.route('/game/setting_multi')
+@login_required
 def setting_multi():
     # 1人目:gameRecord作成 2人目以降:gameRecordをupdateしてstart_multiにredirect
     latest_game = Game.query.order_by(Game.id.desc()).first()
@@ -63,7 +61,7 @@ def setting_multi():
         session['id'] = latest_game.id
         session['correct'] = correct_id
         session['select'] = select_id
-        session['created_at'] = latest_game.created_at
+        session['created_timestamp'] = datetime.timestamp(latest_game.created_at)
         session['creatable'] = False
 
         # start_multiにリダイレクト
@@ -73,6 +71,7 @@ def setting_multi():
 
 
 @app.route('/game/start_multi', methods=['POST', 'GET'])
+@login_required
 def start_multi():
     # 1人目ならgameを作る
     if session['creatable']:
@@ -145,23 +144,17 @@ def start_multi():
             session['id'] = this_game.id
             session['correct'] = correct_id
             session['select'] = select_id
-            session['created_at'] = this_game.created_at
+            session['created_timestamp'] = datetime.timestamp(this_game.created_at)
             session['creatable'] = False
-    else:
-        # 2人目以降なら、sessionに必要内容格納する
-        pass
 
     session['num'] = 1
     session['answer'] = []
     session['judge'] = []
     session['correct_song'] = {}
 
-    created_timestamp = datetime.timestamp(session['created_at'])
-
     game = {
-        'created_at': session['created_at'],
-        'limit_time': round(created_timestamp + START_WAITING_TIME),
-        'START_DISPLAY_TIME': START_DISPLAY_TIME,
+        'limit_time': round(session['created_timestamp'] + START_WAITING_TIME),
+        'DISPLAY_TIME': DISPLAY_TIME,
         'game_id': session['id']
     }
 
@@ -169,7 +162,13 @@ def start_multi():
 
 
 @app.route('/game/question_multi')
+@login_required
 def question_multi():
+    # 参加が1人なら、ゲーム不成立。
+    chk_entry = Game.query.with_entities(Game.entry_user2).filter(Game.id == session['id']).all()
+    if not chk_entry[0][0]:
+        return redirect(url_for('failure_multi'))
+
     # 10問やってるなら、resultに送る
     if session['num'] > MAX_QUESTION:
         return redirect(url_for('result_multi'))
@@ -184,14 +183,18 @@ def question_multi():
     game = {
         'num': session['num'],
         'correct_song': session['correct_song'],
-        'select_song': Song.query.filter(Song.id.in_(select[num - 1])).all()
+        'select_song': Song.query.filter(Song.id.in_(select[num - 1])).all(),
+        'limit_time': round(
+            session['created_timestamp'] + START_WAITING_TIME + QUESTION_TIME * num + ANSWER_TIME * (num - 1)),
+        'DISPLAY_TIME': DISPLAY_TIME,
     }
 
     return render_template('games/question_multi.html', game=game)
 
 
-@app.route('/game/answer_multi', methods=['POST'])
-def answer_multi():
+@app.route('/game/record_log_multi', methods=['POST'])
+@login_required
+def record_log_multi():
     num = session['num']
     answer = int(request.form['answer'])
     session['answer'].append(answer)
@@ -236,17 +239,27 @@ def answer_multi():
     db.session.add(log)
     db.session.commit()
 
+    session['num'] += 1
+    return redirect(url_for('answer_multi'))
+
+
+@app.route('/game/answer_multi')
+@login_required
+def answer_multi():
     game = {
-        'num': num,
-        'judge': judge,
+        'num': session['num'] - 1,
+        'judge': session['judge'][-1],
         'correct_song': session['correct_song'],
+        'limit_time': round(
+            session['created_timestamp'] + START_WAITING_TIME + (QUESTION_TIME + ANSWER_TIME) * (session['num'] - 1)),
+        'DISPLAY_TIME': DISPLAY_TIME,
     }
 
-    session['num'] += 1
     return render_template('games/answer_multi.html', game=game)
 
 
 @app.route('/game/result_multi')
+@login_required
 def result_multi():
     # 結果内容
     correct_song_list = Song.query.filter(Song.id.in_(session['correct'])).all()
@@ -302,6 +315,17 @@ def result_multi():
     }
 
     return render_template('games/result_multi.html', game=game)
+
+
+@app.route('/game/failure_multi')
+@login_required
+def failure_multi():
+    return render_template('games/failure_multi.html')
+
+
+@app.route('/game/setting')
+def setting_game():
+    return render_template('games/setting.html')
 
 
 @app.route('/game/start', methods=['POST'])
@@ -383,6 +407,8 @@ def start_game():
         session['select'] = select_id
         session['correct_song'] = {}
 
+        session['created_timestamp'] = None
+
         return redirect(url_for('question'))
 
 
@@ -408,9 +434,8 @@ def question():
     return render_template('games/question.html', game=game)
 
 
-@app.route('/game/answer', methods=['POST'])
-def answer():
-    # todo:リダイレクトで問題ナンバーが進んでしまうので直す
+@app.route('/game/record_log', methods=['POST'])
+def record_log():
     num = session['num']
     answer = int(request.form['answer'])
     session['answer'].append(answer)
@@ -438,13 +463,18 @@ def answer():
     db.session.add(log)
     db.session.commit()
 
+    session['num'] += 1
+    return redirect(url_for('answer'))
+
+
+@app.route('/game/answer')
+def answer():
     game = {
-        'num': num,
-        'judge': judge,
+        'num': session['num'] - 1,
+        'judge': session['judge'][-1],
         'correct_song': session['correct_song'],
     }
 
-    session['num'] += 1
     return render_template('games/answer.html', game=game)
 
 

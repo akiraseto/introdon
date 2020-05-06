@@ -1,37 +1,36 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<div class="container text-center">
-  <h1 class="display-4">第{{game['num']}}問 /10</h1>
+  <div class="container text-center">
+    <h1 class="display-4">第{{ game['num'] }}問 /10</h1>
 
-  <form action="{{ url_for('answer') }}" class="" method=post>
-    <div class="row px-5">
+    <form action="{{ url_for('record_log') }}" class="" method=post>
+      <div class="row px-5">
 
-      {% for select in game['select_song'] %}
-      <div class="col-md-3 mx-auto">
-        <div class="card h-100">
-          <button class="h-100 border-none" name="answer" value="{{ select.id }}">
-            <div class="card-body">
-              <h5>{{ select.artist }}</h5>
-              <h5>{{ select.track}}</h5>
-            </div>
+        {% for select in game['select_song'] %}
+          <div class="col-md-3 mx-auto">
+            <div class="card h-100">
+              <button class="h-100 border-none" name="answer" value="{{ select.id }}">
+                <div class="card-body">
+                  <h5>{{ select.artist }}</h5>
+                  <h5>{{ select.track }}</h5>
+                </div>
           </button>
         </div>
+          </div>
+        {% endfor %}
+
       </div>
-      {% endfor %}
+    </form>
 
-    </div>
-  </form>
+  </div>
 
-</div>
+  <script type="text/javascript">
+    $(document).ready(function () {
+      const audio = new Audio("{{game['correct_song'].preview}}#t=3,30");
+      audio.play();
+    }, false);
 
-<script type="text/javascript">
-  $(document).ready(function () {
-    var audio = new Audio("{{game['correct_song'].preview}}#t=1,6.5");
-    audio.play();
-    this.blur();
-  }, false);
-
-</script>
+  </script>
 
 {% endblock %}
