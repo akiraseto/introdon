@@ -10,18 +10,22 @@ class Log(db.Model):
     game_id = db.Column(db.Integer, nullable=False)
     question_num = db.Column(db.Integer, nullable=False)
     judge = db.Column(db.Integer, nullable=False)
+    score = db.Column(db.Integer)
     correct_song_id = db.Column(db.Integer, nullable=False)
     select_song_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
-    def __init__(self, game_id, question_num, judge, correct_song_id, select_song_id, user_id=None):
+    def __init__(self, game_id, question_num, judge, correct_song_id, select_song_id, user_id=None, score=0):
         self.user_id = user_id
         self.game_id = game_id
         self.question_num = question_num
         self.judge = judge
+        self.score = score
         self.correct_song_id = correct_song_id
         self.select_song_id = select_song_id
         self.created_at = datetime.now()
 
     def __repr__(self):
-        return '<Entry id:{}>'.format(self.id)
+        return '<Entry id:{} game_id:{} question_num:{} user_id:{} score:{}>'.format(self.id, self.game_id,
+                                                                                     self.question_num, self.user_id,
+                                                                                     self.score)

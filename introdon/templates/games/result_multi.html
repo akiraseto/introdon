@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+{% block body %}
+
+  <div class="container text-center">
+    <div class="mb-5">
+      <h1 class="display-4">順位発表</h1>
+      <table class="table">
+        <thead>
+        <td>rank</td>
+        <td>user</td>
+        <td>score</td>
+        </thead>
+        {% for rank in game.display_rank %}
+          <tr>
+
+            {% if loop.index == 1 %}
+              <td>GOLD</td>
+            {% elif loop.index == 2 %}
+              <td>SILVER</td>
+            {% elif loop.index == 3 %}
+              <td>BRONZE</td>
+            {% else %}
+              <td>{{ loop.index }}位</td>
+            {% endif %}
+
+
+
+            {% if rank[0] == current_user.username %}
+              <td><span class="text-primary font-weight-bold">{{ current_user.username }}さん</span></td>
+            {% else %}
+              <td>{{ rank[0] }}さん</td>
+            {% endif %}
+
+            <td>{{ rank[1] }}point</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+
+    <h1 class="display-5">{{ current_user.username }}さんの正解数 {{ game.count_judge }} /10問</h1>
+
+    <div class="row">
+      {% for song in game.correct_song_list %}
+        <div class="col-md-3 pb-2">
+          <div class="card h-100">
+            <button class="h-100 border-none" onclick=sound("{{ song.preview }}")>
+              <p>第{{ loop.index }}問</p>
+              <span class="align-items-center justify-content-center">
+          {% if game.judge[loop.index -1] == 1 %}
+            <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+          {% else %}
+            <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
+          {% endif %}
+        </span>
+
+              <div class="card-body">
+                <p>{{ song.artist }}</p>
+                <p>{{ song.track }}</p>
+                <img alt="jacket_img" class="rounded float-center" src="{{ song.jacket_img }}">
+              </div>
+            </button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_multi') }}'" type=“button”>
+      もう一度遊ぶ
+    </button>
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'" type=“button”>やめる
+    </button>
+  </div>
+
+
+  <script type="text/javascript">
+    let audios = [];
+
+    function sound(track) {
+      for (let i = 0; i < audios.length; i++) {
+        audios[i].pause();
+      }
+
+      const audio = new Audio(track + "#t=2,30");
+      audio.play();
+      audios = [];
+      audios.push(audio);
+    }
+  </script>
+
+
+{% endblock %}

@@ -1,32 +1,36 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<div class="container text-center">
-  <h1 class="display-3">クイズ! Intro Don!!</h1>
+  <div class="container text-center">
+    <h1 class="display-3">クイズ! Intro Don!!</h1>
 
 
-  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'" type=“button”>
-    ゲーム開始
-  </button>
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'" type=“button”>
+      ひとりで遊ぶ
+    </button>
+
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_multi') }}'" type=“button”>
+      みんなで遊ぶ
+    </button>
 
 
-  <p>{{user['name']}}</p>
-  <table class="table">
-    <tr>
-      <th colspan="3">成績</th>
-    </tr>
-    <tr>
-      <td>ゲーム回数</td>
-      <td>{{user['sum_game']}}</td>
-    </tr>
-    <tr>
-      <td>合計問題数</td>
-      <td>{{user['sum_answer']}}</td>
-    </tr>
-    <tr>
-      <td>合計正解数</td>
-      <td>{{user['sum_correct']}}</td>
-    </tr>
+    <p>{{ user['name'] }}</p>
+    <table class="table">
+      <tr>
+        <th colspan="3">成績</th>
+      </tr>
+      <tr>
+        <td>ゲーム回数</td>
+        <td>{{ user['sum_game'] }}</td>
+      </tr>
+      <tr>
+        <td>合計問題数</td>
+        <td>{{ user['sum_answer'] }}</td>
+      </tr>
+      <tr>
+        <td>合計正解数</td>
+        <td>{{ user['sum_correct'] }}</td>
+      </tr>
     <tr>
       <td>正解率</td>
       <td>{{user['rate']}}</td>
