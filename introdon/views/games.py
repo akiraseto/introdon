@@ -14,7 +14,6 @@ from introdon.models.users import User
 
 MAX_QUESTION = 10
 MAX_SELECT = 4
-# START_WAITING_TIME = 30
 START_WAITING_TIME = 20
 DISPLAY_TIME = 2
 QUESTION_TIME = 10
