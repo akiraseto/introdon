@@ -18,7 +18,7 @@ class TestIntroDon(unittest.TestCase):
         os.unlink(introdon.DATABASE)
 
     def login(self, username, password):
-        return self.app.post('/login', data=dict(
+        return self.app.post('/', data=dict(
             username=username,
             password=password
         ), follow_redirects=True)

@@ -18,6 +18,10 @@
 
   <script type="text/javascript">
     let ready = $(document).ready(function () {
+      let audio = new Audio("{{ url_for('static', filename='timer.m4a') }}");
+      audio.loop = true;
+      audio.play();
+
       const display_time = {{ game.DISPLAY_TIME }};
       const limit_time = {{ game.limit_time}};
       let jump = false;
