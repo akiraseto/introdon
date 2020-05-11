@@ -14,16 +14,16 @@
           <p>第{{loop.index}}問</p>
           <span class="align-items-center justify-content-center">
           {% if game.judge[loop.index -1] == 1 %}
-          <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+            <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
           {% else %}
-          <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
+            <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
           {% endif %}
         </span>
 
           <div class="card-body">
             <p>{{ song.artist }}</p>
             <p>{{ song.track }}</p>
-            <img alt="jacket_img" class="rounded float-center" src="{{song.jacket_img}}">
+            <img alt="jacket_img" class="rounded float-center" src="{{ song.jacket_img }}">
           </div>
         </button>
       </div>
@@ -31,14 +31,18 @@
     {% endfor %}
   </div>
 
-  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'" type=“button”>
+  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'">
     もう一度遊ぶ
   </button>
-  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'" type=“button”>やめる</button>
+  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'">やめる</button>
 </div>
 
 
   <script type="text/javascript">
+    const sound_question = new Audio("{{ url_for('static', filename='cheer.mp3') }}");
+    sound_question.volume = 0.3
+    sound_question.play();
+
     let audios = [];
 
     function sound(track) {

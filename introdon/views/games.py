@@ -2,6 +2,7 @@ import random
 from datetime import datetime
 from datetime import timedelta
 
+import requests
 from flask import redirect, url_for, render_template, flash, session, request
 from flask_login import current_user, login_required
 
@@ -14,7 +15,7 @@ from introdon.models.users import User
 MAX_QUESTION = 10
 MAX_SELECT = 4
 # START_WAITING_TIME = 30
-START_WAITING_TIME = 10
+START_WAITING_TIME = 20
 DISPLAY_TIME = 2
 QUESTION_TIME = 10
 ANSWER_TIME = 7
@@ -78,27 +79,96 @@ def start_multi():
 
         # 曲の絞り込み機能
         artist = request.form['artist']
-        artist = '%' + artist + '%'
         genre = request.form['genre']
-        genre = '%' + genre + '%'
         release_from = request.form['release_from']
         release_end = request.form['release_end']
 
         release_from = datetime.strptime(release_from, '%Y')
         release_end = datetime.strptime(release_end, '%Y')
 
-        song_instance = Song.query.with_entities(Song.id).filter(Song.artist.like(artist),
-                                                                 Song.genre.like(genre),
-                                                                 Song.release_date >= release_from,
-                                                                 Song.release_date < release_end).all()
-        song_instance = [value[0] for value in song_instance]
+        # 曲を追加したかチェック
+        no_add_song = 0
+        while no_add_song < 2:
 
-        # gameをgenerateしてDBに保存する
-        # レコード数をカウント
-        songs_count = len(song_instance)
+            song_instance = Song.query.with_entities(Song.id).filter(Song.artist.like('%' + artist + '%'),
+                                                                     Song.genre.like('%' + genre + '%'),
+                                                                     Song.release_date >= release_from,
+                                                                     Song.release_date < release_end).all()
+            song_instance = [value[0] for value in song_instance]
+
+            # gameをgenerateしてDBに保存する
+            # レコード数をカウント
+            songs_count = len(song_instance)
+
+            if songs_count >= MAX_QUESTION * 4:
+                break
+
+            # 登録曲が少なすぎる場合
+            if no_add_song < 1:
+
+                ITUNES_URI = 'https://itunes.apple.com/search'
+
+                # termを作る
+                term = ''
+                if artist and genre:
+                    term = artist + "+" + genre
+                elif artist and not genre:
+                    term = artist
+                elif not artist and genre:
+                    term = genre
+
+                params = {
+                    'media': 'music',
+                    'country': 'jp',
+                    'lang': 'ja_jp',
+                    'term': term,
+                    'limit': 50
+                }
+
+                res = requests.get(ITUNES_URI, params)
+                _status_code = res.status_code
+                _json = res.json()
+
+                if _status_code == 200:
+                    # すでに曲が登録している場合は省く
+                    track_ids = []
+                    for result in _json['results']:
+                        track_ids.append(result['trackId'])
+
+                    duplicate = Song.query.with_entities(Song.track_id).filter(Song.track_id.in_(track_ids)).all()
+                    dup_track_id = []
+                    for dup in duplicate:
+                        dup_track_id.append(dup[0])
+                    print('duplicateTrackId: ', dup_track_id)
+
+                    items = []
+                    for result in _json['results']:
+                        if result['trackId'] not in dup_track_id:
+                            dt = result['releaseDate']
+                            dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+
+                            item = Song(
+                                track=result['trackName'],
+                                track_id=result['trackId'],
+                                artist=result['artistName'],
+                                artist_id=result['artistId'],
+                                genre=result['primaryGenreName'],
+                                jacket_img=result['artworkUrl100'],
+                                preview=result['previewUrl'],
+                                release_date=dt
+                            )
+                            items.append(item)
+
+                    db.session.add_all(items)
+                    db.session.commit()
+
+                no_add_song += 1
+            else:
+                break
 
         # 登録曲が少なすぎる場合
         if songs_count < MAX_QUESTION * 4:
+
             flash('該当曲が少なくて問題を作れません、範囲を広めてください。')
             return render_template('games/setting_multi.html')
 

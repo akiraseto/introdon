@@ -32,7 +32,7 @@
     <div>
       {% if game['num'] == 10 %}
         <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('result_multi') }}'"
-                type=“button”>
+        >
           結果発表
         </button>
 
@@ -47,7 +47,20 @@
   <script type="text/javascript">
     $(document).ready(function () {
       const audio = new Audio("{{game['correct_song'].preview}}#t=7,22");
-      audio.play();
+
+      const judge = {{ game.judge }};
+      if (judge === 1) {
+        const sound_question = new Audio("{{ url_for('static', filename='right.mp3') }}");
+        sound_question.play();
+      } else {
+        const sound_question = new Audio("{{ url_for('static', filename='wrong.mp3') }}");
+        sound_question.play();
+      }
+
+      const startMusic = () => {
+        audio.play();
+      };
+      setTimeout(startMusic, 1000);
 
       const display_time = {{ game.DISPLAY_TIME }};
       const limit_time = {{ game.limit_time}};

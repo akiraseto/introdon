@@ -28,7 +28,15 @@
   <script type="text/javascript">
     $(document).ready(function () {
       const audio = new Audio("{{game['correct_song'].preview}}#t=3,30");
-      audio.play();
+      const sound_question = new Audio("{{ url_for('static', filename='question.mp3') }}");
+      sound_question.play();
+
+      const startMusic = () => {
+        audio.play();
+      };
+
+      setTimeout(startMusic, 2000);
+
     }, false);
 
   </script>

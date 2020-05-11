@@ -18,23 +18,23 @@
       <p>正解は</p>
       <div class="card">
         <div class="card-body">
-          <h5>{{game.correct_song.artist}}</h5>
-          <h5>{{game.correct_song.track}}</h5>
-          <img alt="jacket_img" class="img-thumbnail" src="{{game.correct_song.jacket_img}}">
+          <h5>{{ game.correct_song.artist }}</h5>
+          <h5>{{ game.correct_song.track }}</h5>
+          <img alt="jacket_img" class="img-thumbnail" src="{{ game.correct_song.jacket_img }}">
         </div>
       </div>
 
       <div>
 
         {% if game['num'] == 10 %}
-        <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('result') }}'" type=“button”>
-          結果発表
-        </button>
+          <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('result') }}'">
+            結果発表
+          </button>
 
         {% else %}
-        <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('question') }}'" type=“button”>
-          次の問題へ
-        </button>
+          <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('question') }}'">
+            次の問題へ
+          </button>
 
         {% endif %}
 
@@ -48,7 +48,23 @@
   <script type="text/javascript">
     $(document).ready(function () {
       const audio = new Audio("{{game['correct_song'].preview}}#t=3,30");
-      audio.play();
+
+      const judge = {{ game.judge }};
+      if (judge === 1) {
+        const sound_question = new Audio("{{ url_for('static', filename='right.mp3') }}");
+        sound_question.play();
+
+      } else {
+        const sound_question = new Audio("{{ url_for('static', filename='wrong.mp3') }}");
+        sound_question.play();
+      }
+
+      const startMusic = () => {
+        audio.play();
+      };
+
+      setTimeout(startMusic, 1000);
+
     }, false);
   </script>
 {% endblock %}

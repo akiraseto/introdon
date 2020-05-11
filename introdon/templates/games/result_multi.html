@@ -65,15 +65,19 @@
       {% endfor %}
     </div>
 
-    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_multi') }}'" type=“button”>
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_multi') }}'">
       もう一度遊ぶ
     </button>
-    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'" type=“button”>やめる
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'">やめる
     </button>
   </div>
 
 
   <script type="text/javascript">
+    const sound_question = new Audio("{{ url_for('static', filename='cheer.mp3') }}");
+    sound_question.volume = 0.3
+    sound_question.play();
+
     let audios = [];
 
     function sound(track) {
