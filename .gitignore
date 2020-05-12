@@ -130,3 +130,19 @@ dmypy.json
 /.idea/
 
 introdon/config.py
+
+
+# vue/cli
+.DS_Store
+/frontend/node_modules
+/frontend/dist
+
+# local env files
+.env.local
+.env.*.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
