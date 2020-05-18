@@ -3,7 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 
 import requests
-from flask import redirect, url_for, render_template, flash, session, request
+from flask import redirect, url_for, render_template, flash, session, request, jsonify
 from flask_login import current_user, login_required
 
 from introdon import app, db
@@ -400,18 +400,21 @@ def setting_game():
 @app.route('/game/start', methods=['POST'])
 def start_game():
     # 曲の絞り込み機能
-    artist = request.form['artist']
-    artist = '%' + artist + '%'
-    genre = request.form['genre']
-    genre = '%' + genre + '%'
-    release_from = request.form['release_from']
-    release_end = request.form['release_end']
+    # artist = request.form['artist']
+    # genre = request.form['genre']
+    # release_from = request.form['release_from']
+    # release_end = request.form['release_end']
+
+    artist = request.json['artist']
+    genre = request.json['genre']
+    release_from = str(request.json['release_from'])
+    release_end = str(request.json['release_end'])
 
     release_from = datetime.strptime(release_from, '%Y')
     release_end = datetime.strptime(release_end, '%Y')
 
-    song_instance = Song.query.with_entities(Song.id, Song.track_id).filter(Song.artist.like(artist),
-                                                                            Song.genre.like(genre),
+    song_instance = Song.query.with_entities(Song.id, Song.track_id).filter(Song.artist.like('%' + artist + '%'),
+                                                                            Song.genre.like('%' + genre + '%'),
                                                                             Song.release_date >= release_from,
                                                                             Song.release_date < release_end).all()
 
@@ -491,16 +494,19 @@ def question():
     correct = session['correct']
     select = session['select']
 
+    song_schema = SongSchema()
     song = Song.query.filter(Song.id == correct[num - 1]).first()
-    session['correct_song'] = SongSchema().dump(song)
+    session['correct_song'] = song_schema.dump(song)
+    select_song = song_schema.dump(Song.query.filter(Song.id.in_(select[num - 1])).all(), many=True)
 
     game = {
         'num': session['num'],
         'correct_song': session['correct_song'],
-        'select_song': Song.query.filter(Song.id.in_(select[num - 1])).all()
+        'select_song': select_song
     }
 
-    return render_template('games/question.html', game=game)
+    # return render_template('games/question.html', game=game)
+    return jsonify(game)
 
 
 @app.route('/game/record_log', methods=['POST'])
@@ -566,3 +572,14 @@ def result():
     }
 
     return render_template('games/result.html', game=game)
+
+
+@app.route('/game/test')
+def test():
+    test = {
+        'name': 'どらえもん',
+        'age': 500,
+        'color': 'blue'
+    }
+
+    return jsonify(test)
