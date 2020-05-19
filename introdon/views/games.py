@@ -491,13 +491,15 @@ def question():
     correct = session['correct']
     select = session['select']
 
+    song_schema = SongSchema()
     song = Song.query.filter(Song.id == correct[num - 1]).first()
-    session['correct_song'] = SongSchema().dump(song)
+    session['correct_song'] = song_schema.dump(song)
+    select_song = song_schema.dump(Song.query.filter(Song.id.in_(select[num - 1])).all(), many=True)
 
     game = {
         'num': session['num'],
         'correct_song': session['correct_song'],
-        'select_song': Song.query.filter(Song.id.in_(select[num - 1])).all()
+        'select_song': select_song
     }
 
     return render_template('games/question.html', game=game)
