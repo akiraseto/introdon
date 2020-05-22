@@ -36,23 +36,15 @@ class Song(db.Model):
 
 
 class SongLogic():
-    def __init__(self, artist=None, genre=None, release_from='1900', release_end='2100'):
-        self.artist = artist
-        self.genre = genre
-        self.release_from = release_from
-        self.release_end = release_end
-
+    def __init__(self):
         self.validate = False
         self.flash = ''
         self.correct_id = []
         self.select_id = []
 
-    def make_question(self):
-
-        artist = self.artist
-        genre = self.genre
-        release_from = datetime.strptime(self.release_from, '%Y')
-        release_end = datetime.strptime(self.release_end, '%Y')
+    def make_question(self, artist, genre, release_from, release_end):
+        release_from = datetime.strptime(release_from, '%Y')
+        release_end = datetime.strptime(release_end, '%Y')
 
         song_instance = Song.query.with_entities(Song.id).filter(Song.artist.like('%' + artist + '%'),
                                                                  Song.genre.like('%' + genre + '%'),
@@ -102,6 +94,13 @@ class SongLogic():
             self.select_id = select_id
 
         return self.validate
+
+    def dump_question_song(self, correct, selects, num):
+        song_schema = SongSchema()
+        correct_song = song_schema.dump(Song.query.filter(Song.id == correct[num - 1]).first())
+        select_songs = song_schema.dump(Song.query.filter(Song.id.in_(selects[num - 1])).all(), many=True)
+
+        return correct_song, select_songs
 
 
 class SongSchema(ma.SQLAlchemyAutoSchema):

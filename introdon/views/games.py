@@ -9,7 +9,7 @@ from flask_login import current_user, login_required
 from introdon import app, db
 from introdon.models.games import Game, GameLogic
 from introdon.models.logs import Log, LogLogic
-from introdon.models.songs import Song, SongLogic, SongSchema
+from introdon.models.songs import Song, SongLogic
 from introdon.models.users import User
 from introdon.views.config_introdon import *
 from introdon.views.form import SettingForm
@@ -239,15 +239,17 @@ def question_multi():
 
     num = session['num']
     correct = session['correct']
-    select = session['select']
+    selects = session['select']
 
-    song = Song.query.filter(Song.id == correct[num - 1]).first()
-    session['correct_song'] = SongSchema().dump(song)
+    # クイズ用の曲をシリアライズして用意する
+    song_logic = SongLogic()
+    correct_song, select_songs = song_logic.dump_question_song(correct, selects, num)
 
+    session['correct_song'] = correct_song
     game = {
         'num': session['num'],
-        'correct_song': session['correct_song'],
-        'select_song': Song.query.filter(Song.id.in_(select[num - 1])).all(),
+        'correct_song': correct_song,
+        'select_song': select_songs,
         'limit_time': round(
             session['created_timestamp'] + START_WAITING_TIME + QUESTION_TIME * num + ANSWER_TIME * (num - 1)),
         'DISPLAY_TIME': DISPLAY_TIME,
@@ -373,8 +375,8 @@ def setting_game():
         release_from = form.release_from.data
         release_end = form.release_end.data
 
-        song_logic = SongLogic(artist, genre, release_from, release_end)
-        song_logic.make_question()
+        song_logic = SongLogic()
+        song_logic.make_question(artist, genre, release_from, release_end)
 
         if song_logic.validate:
             game_logic = GameLogic()
@@ -403,17 +405,17 @@ def question():
 
     num = session['num']
     correct = session['correct']
-    select = session['select']
+    selects = session['select']
 
-    song_schema = SongSchema()
-    song = Song.query.filter(Song.id == correct[num - 1]).first()
-    session['correct_song'] = song_schema.dump(song)
-    select_song = song_schema.dump(Song.query.filter(Song.id.in_(select[num - 1])).all(), many=True)
+    # クイズ用の曲をシリアライズして用意する
+    song_logic = SongLogic()
+    correct_song, select_songs = song_logic.dump_question_song(correct, selects, num)
 
+    session['correct_song'] = correct_song
     game = {
         'num': session['num'],
-        'correct_song': session['correct_song'],
-        'select_song': select_song
+        'correct_song': correct_song,
+        'select_song': select_songs
     }
 
     return render_template('games/question.html', game=game)
