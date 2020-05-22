@@ -18,6 +18,7 @@ from introdon.views.form import SettingForm
 @app.route('/game/setting_multi')
 @login_required
 def setting_multi():
+    # todo:logic最適化を検討する
     # 1人目:gameRecord作成 2人目以降:gameRecordをupdateしてstart_multiにredirect
     latest_game = Game.query.order_by(Game.id.desc()).first()
     session['creatable'] = True
@@ -68,6 +69,8 @@ def setting_multi():
 @app.route('/game/start_multi', methods=['POST', 'GET'])
 @login_required
 def start_multi():
+    # todo:logic最適化を検討する
+
     # 1人目ならgameを作る
     if session['creatable']:
 
@@ -298,8 +301,12 @@ def answer_multi():
 @login_required
 def result_multi():
     # 結果内容
-    correct_song_list = Song.query.filter(Song.id.in_(session['correct'])).all()
-    correct_song_list = [next(s for s in correct_song_list if s.id == id) for id in session['correct']]
+    # todo:logic最適化を検討する
+
+    # 正解曲の内容をダンプ
+    correct_songs = session['correct']
+    song_logic = SongLogic()
+    correct_song_list = song_logic.dump_correct_songs_list(correct_songs)
 
     # Logを集計してGameのgold_user...bronze_scoreをupdateする
     # Gameから参加ユーザーのidを取得する
@@ -454,9 +461,10 @@ def answer():
 
 @app.route('/game/result')
 def result():
-    # 結果内容
-    correct_song_list = Song.query.filter(Song.id.in_(session['correct'])).all()
-    correct_song_list = [next(s for s in correct_song_list if s.id == id) for id in session['correct']]
+    # 正解曲の内容をダンプ
+    correct_songs = session['correct']
+    song_logic = SongLogic()
+    correct_song_list = song_logic.dump_correct_songs_list(correct_songs)
 
     game = {
         'judge': session['judge'],

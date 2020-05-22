@@ -102,6 +102,12 @@ class SongLogic():
 
         return correct_song, select_songs
 
+    def dump_correct_songs_list(self, correct_songs):
+        correct_song_list = Song.query.filter(Song.id.in_(correct_songs)).all()
+        correct_song_list = [next(s for s in correct_song_list if s.id == id) for id in correct_songs]
+
+        return correct_song_list
+
 
 class SongSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
