@@ -7,17 +7,12 @@ from flask import redirect, url_for, render_template, flash, session, request
 from flask_login import current_user, login_required
 
 from introdon import app, db
-from introdon.models.games import Game
+from introdon.models.games import Game, GameLogic
 from introdon.models.logs import Log
-from introdon.models.songs import Song, SongSchema
+from introdon.models.songs import Song, SongLogic, SongSchema
 from introdon.models.users import User
-
-MAX_QUESTION = 10
-MAX_SELECT = 4
-START_WAITING_TIME = 20
-DISPLAY_TIME = 2
-QUESTION_TIME = 10
-ANSWER_TIME = 7
+from introdon.views.config_introdon import MAX_QUESTION, MAX_SELECT
+from introdon.views.form import SettingForm
 
 
 @app.route('/game/setting_multi')
@@ -392,91 +387,40 @@ def failure_multi():
     return render_template('games/failure_multi.html')
 
 
-@app.route('/game/setting')
+@app.route('/game/setting', methods=['GET', 'POST'])
 def setting_game():
-    return render_template('games/setting.html')
+    form = SettingForm()
+    user_id = None
+    if current_user.is_authenticated:
+        user_id = current_user.id
 
-
-@app.route('/game/start', methods=['POST'])
-def start_game():
-    # 曲の絞り込み機能
-    artist = request.form['artist']
-    artist = '%' + artist + '%'
-    genre = request.form['genre']
-    genre = '%' + genre + '%'
-    release_from = request.form['release_from']
-    release_end = request.form['release_end']
-
-    release_from = datetime.strptime(release_from, '%Y')
-    release_end = datetime.strptime(release_end, '%Y')
-
-    song_instance = Song.query.with_entities(Song.id, Song.track_id).filter(Song.artist.like(artist),
-                                                                            Song.genre.like(genre),
-                                                                            Song.release_date >= release_from,
-                                                                            Song.release_date < release_end).all()
-
-    # gameをgenerateしてDBに保存する
-    # レコード数をカウント
-    songs_count = len(song_instance)
-
-    # 登録曲が少なすぎる場合
-    if songs_count < MAX_QUESTION * 4:
-        flash('該当曲が少なくて問題を作れません、範囲を広めてください。')
-        return render_template('games/setting.html')
+    if request.method != 'POST':
+        return render_template('games/setting.html', form=form)
 
     else:
-        # 正解を作る(id)
-        correct = []
-        for i in range(MAX_QUESTION):
-            while True:
-                index = random.randint(0, songs_count - 1)
-                if index not in correct:
-                    correct.append(index)
-                    break
-        correct = [song_instance[i] for i in correct]
-        correct_id = [value[0] for value in correct]
+        artist = form.artist.data
+        genre = form.genre.data
+        release_from = form.release_from.data
+        release_end = form.release_end.data
 
-        # 選択肢を作成(id)
-        select = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
-        select_id = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
+        song_logic = SongLogic(artist, genre, release_from, release_end)
+        song_logic.make_question()
 
-        for i in range(MAX_QUESTION):
-            rand_index = random.randint(0, MAX_SELECT - 1)
-            select[i][rand_index] = correct[i]
-            select_id[i][rand_index] = correct[i][0]
-            for j in range(MAX_SELECT):
-                if select[i][j] == 0:
-                    while True:
-                        index = song_instance[random.randint(0, songs_count - 1)]
-                        if index not in select[i]:
-                            select[i][j] = index
-                            select_id[i][j] = index[0]
+        if song_logic.validate:
+            game_logic = GameLogic()
+            game_id = game_logic.create_game(song_logic.correct_id, song_logic.select_id, user_id)
 
-                            break
-
-        # song_idにしてGame tableに保存
-        records = {}
-        for i in range(MAX_QUESTION):
-            records["question" + str(i + 1) + "_correct_song_id"] = correct[i][1]
-            for j in range(MAX_SELECT):
-                records["question" + str(i + 1) + "_select" + str(j + 1) + "_song_id"] = select[i][j][1]
-
-        if current_user.is_authenticated:
-            records["entry_user1"] = current_user.id
-
-        this_game = Game(**records)
-        db.session.add(this_game)
-        db.session.commit()
-
-        session['num'] = 1
-        session['answer'] = []
-        session['judge'] = []
-        session['id'] = this_game.id
-        session['correct'] = correct_id
-        session['select'] = select_id
-        session['correct_song'] = {}
-
-        session['created_timestamp'] = None
+            session['num'] = 1
+            session['answer'] = []
+            session['judge'] = []
+            session['id'] = game_id
+            session['correct'] = song_logic.correct_id
+            session['select'] = song_logic.select_id
+            session['correct_song'] = {}
+            session['created_timestamp'] = None
+        else:
+            flash(song_logic.flash)
+            return render_template('games/setting.html', form=form)
 
         return redirect(url_for('question'))
 

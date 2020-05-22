@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from introdon import db
+from introdon.views.config_introdon import MAX_QUESTION, MAX_SELECT
 
 
 class Game(db.Model):
@@ -194,3 +195,26 @@ class Game(db.Model):
 
     def __repr__(self):
         return '<Entry id:{}>'.format(self.id)
+
+
+class GameLogic:
+    def __init__(self):
+        self.game_id = None
+
+    def create_game(self, correct_id: int, select_id: int, user_id: int):
+        # song_idにしてGame tableに保存
+        records = {}
+        for i in range(MAX_QUESTION):
+            records["question" + str(i + 1) + "_correct_song_id"] = correct_id[i]
+            for j in range(MAX_SELECT):
+                records["question" + str(i + 1) + "_select" + str(j + 1) + "_song_id"] = select_id[i][j]
+
+        if user_id:
+            records["entry_user1"] = user_id
+
+        this_game = Game(**records)
+        db.session.add(this_game)
+        db.session.commit()
+
+        self.game_id = this_game.id
+        return self.game_id

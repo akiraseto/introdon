@@ -1,27 +1,33 @@
 {% from "_render_field.html" import render_field %}
 {% extends "layout.html" %}
 {% block body %}
-<div class="container text-center">
+  <div class="container text-center">
 
-  <h1 class="display-1">クイズ! Intro Don!!</h1>
+    <h1 class="display-2">クイズ! Intro Don!!</h1>
 
-  <form action="{{ url_for('index') }}" method="POST">
-    {{ form.csrf_token }}
+    {#  todo:レイアウト整える#}
+    <div>
+      <p>5人で早押し対戦!<br>
+        1人でじっくり曲当て!</p>
+    </div>
 
-    {{ render_field(form.username )}}
+    <form action="{{ url_for('index') }}" method="POST">
+      {{ form.csrf_token }}
 
-    {{ render_field(form.password )}}
+      {{ render_field(form.username ) }}
 
-    <button class="btn btn-primary" type="submit">ログイン</button>
-  </form>
+      {{ render_field(form.password ) }}
 
-  <button class="btn btn-secondary m-3 inline" onclick="location.href='{{ url_for('create_user') }}'" type=“button”>
-    アカウント作る
-  </button>
+      <button class="btn btn-primary" type="submit">ログイン</button>
+    </form>
 
-  <button class="btn btn-secondary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'" type=“button”>
-    簡易版で遊ぶ
-  </button>
+    <button class="btn btn-secondary m-3 inline" onclick="location.href='{{ url_for('create_user') }}'">
+      アカウント作る
+    </button>
 
-</div>
+    <button class="btn btn-secondary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'">
+      簡易版で遊ぶ
+    </button>
+
+  </div>
 {% endblock %}

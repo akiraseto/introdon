@@ -1,26 +1,11 @@
 from flask import redirect, url_for, render_template, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from flask_wtf import FlaskForm
 from werkzeug.security import generate_password_hash, check_password_hash
-from wtforms import StringField, PasswordField
-from wtforms.validators import InputRequired, Length, Regexp
 
 from introdon import app, db
 from introdon.models.logs import Log
 from introdon.models.users import User
-
-
-class UserForm(FlaskForm):
-    # 半角英数のみ
-    message_reg = '半角英数のみでお願いします。'
-    message_len = '4文字以上10文字以内でお願いします。'
-
-    username = StringField('ユーザーネーム', validators=[InputRequired('A username is required!'),
-                                                  Regexp("^[a-zA-Z0-9]+$", message=message_reg),
-                                                  Length(min=4, max=10, message=message_len)])
-    password = PasswordField('パスワード', validators=[InputRequired('A password is required!'),
-                                                  Regexp("^[a-zA-Z0-9]+$", message=message_reg),
-                                                  Length(min=4, max=10, message=message_len)])
+from introdon.views.form import UserForm
 
 
 @app.route('/', methods=['GET', 'POST'])
