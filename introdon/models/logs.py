@@ -29,3 +29,26 @@ class Log(db.Model):
         return '<Entry id:{} game_id:{} question_num:{} user_id:{} score:{}>'.format(self.id, self.game_id,
                                                                                      self.question_num, self.user_id,
                                                                                      self.score)
+
+
+class LogLogic:
+    def create_log(self, user_id: int, game_id: int, num: int, correct: int, answer: int):
+        judge = 0
+        score = 0
+        if answer == correct:
+            judge = 1
+            score = 10
+
+        this_log = Log(
+            user_id=user_id,
+            game_id=game_id,
+            select_song_id=answer,
+            judge=judge,
+            score=score,
+            question_num=num,
+            correct_song_id=correct
+        )
+        db.session.add(this_log)
+        db.session.commit()
+
+        return judge

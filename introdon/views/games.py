@@ -8,7 +8,7 @@ from flask_login import current_user, login_required
 
 from introdon import app, db
 from introdon.models.games import Game, GameLogic
-from introdon.models.logs import Log
+from introdon.models.logs import Log, LogLogic
 from introdon.models.songs import Song, SongLogic, SongSchema
 from introdon.models.users import User
 from introdon.views.config_introdon import MAX_QUESTION, MAX_SELECT
@@ -453,37 +453,17 @@ def question():
 def record_log():
     num = session['num']
     answer = int(request.form['answer'])
-    session['answer'].append(answer)
     correct = session['correct'][num - 1]
-
-    judge = 0
-    if answer == correct:
-        judge = 1
-    session['judge'].append(judge)
-
-    # Logにinsert
+    game_id = session['id']
+    user_id = None
     if current_user.is_authenticated:
         user_id = current_user.id
-    else:
-        user_id = None
 
-    # scoreをlogに追加する
-    score = 0
-    if answer == correct:
-        score = 10
+    log_logic = LogLogic()
+    judge = log_logic.create_log(user_id, game_id, num, correct, answer)
 
-    log = Log(
-        user_id=user_id,
-        game_id=session['id'],
-        select_song_id=answer,
-        judge=judge,
-        score=score,
-        question_num=num,
-        correct_song_id=correct
-    )
-    db.session.add(log)
-    db.session.commit()
-
+    session['answer'].append(answer)
+    session['judge'].append(judge)
     session['num'] += 1
     return redirect(url_for('answer'))
 
