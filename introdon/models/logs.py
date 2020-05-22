@@ -32,12 +32,29 @@ class Log(db.Model):
 
 
 class LogLogic:
-    def create_log(self, user_id: int, game_id: int, num: int, correct: int, answer: int):
+    def create_log(self, is_multi: bool, user_id: int, game_id: int, num: int, correct: int, answer: int):
         judge = 0
         score = 0
+
         if answer == correct:
             judge = 1
-            score = 10
+
+            if is_multi:
+                log_count = Log.query.filter(Log.game_id == game_id, Log.question_num == num, Log.judge == 1).count()
+
+                if log_count == 0:
+                    score = 50
+                elif log_count == 1:
+                    score = 40
+                elif log_count == 2:
+                    score = 30
+                elif log_count == 3:
+                    score = 20
+                else:
+                    score = 10
+
+            else:
+                score = 10
 
         this_log = Log(
             user_id=user_id,

@@ -11,7 +11,7 @@ from introdon.models.games import Game, GameLogic
 from introdon.models.logs import Log, LogLogic
 from introdon.models.songs import Song, SongLogic, SongSchema
 from introdon.models.users import User
-from introdon.views.config_introdon import MAX_QUESTION, MAX_SELECT
+from introdon.views.config_introdon import *
 from introdon.views.form import SettingForm
 
 
@@ -259,50 +259,20 @@ def question_multi():
 @app.route('/game/record_log_multi', methods=['POST'])
 @login_required
 def record_log_multi():
+    is_multi = True
     num = session['num']
     answer = int(request.form['answer'])
-    session['answer'].append(answer)
     correct = session['correct'][num - 1]
-
-    judge = 0
-    if answer == correct:
-        judge = 1
-    session['judge'].append(judge)
-
-    # Logにinsert
+    game_id = session['id']
+    user_id = None
     if current_user.is_authenticated:
         user_id = current_user.id
-    else:
-        user_id = None
 
-    # scoreをlogに追加する
-    score = 0
-    if answer == correct:
-        log_count = Log.query.filter(Log.game_id == session['id'], Log.question_num == num).count()
+    log_logic = LogLogic()
+    judge = log_logic.create_log(is_multi, user_id, game_id, num, correct, answer)
 
-        if log_count == 0:
-            score = 50
-        elif log_count == 1:
-            score = 40
-        elif log_count == 2:
-            score = 30
-        elif log_count == 3:
-            score = 20
-        else:
-            score = 10
-
-    log = Log(
-        user_id=user_id,
-        game_id=session['id'],
-        select_song_id=answer,
-        judge=judge,
-        score=score,
-        question_num=num,
-        correct_song_id=correct
-    )
-    db.session.add(log)
-    db.session.commit()
-
+    session['answer'].append(answer)
+    session['judge'].append(judge)
     session['num'] += 1
     return redirect(url_for('answer_multi'))
 
@@ -451,6 +421,7 @@ def question():
 
 @app.route('/game/record_log', methods=['POST'])
 def record_log():
+    is_multi = False
     num = session['num']
     answer = int(request.form['answer'])
     correct = session['correct'][num - 1]
@@ -460,7 +431,7 @@ def record_log():
         user_id = current_user.id
 
     log_logic = LogLogic()
-    judge = log_logic.create_log(user_id, game_id, num, correct, answer)
+    judge = log_logic.create_log(is_multi, user_id, game_id, num, correct, answer)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
