@@ -8,9 +8,9 @@ from flask_login import current_user, login_required
 
 from introdon import app, db
 from introdon.models.games import Game, GameLogic
-from introdon.models.logs import Log, LogLogic
+from introdon.models.logs import LogLogic
 from introdon.models.songs import Song, SongLogic
-from introdon.models.users import User
+from introdon.models.users import UserLogic
 from introdon.views.config_introdon import *
 from introdon.views.form import SettingForm
 
@@ -264,7 +264,6 @@ def question_multi():
 @app.route('/game/record_log_multi', methods=['POST'])
 @login_required
 def record_log_multi():
-    is_multi = True
     num = session['num']
     answer = int(request.form['answer'])
     correct = session['correct'][num - 1]
@@ -274,7 +273,7 @@ def record_log_multi():
         user_id = current_user.id
 
     log_logic = LogLogic()
-    judge = log_logic.create_log(is_multi, user_id, game_id, num, correct, answer)
+    judge = log_logic.create_log(user_id, game_id, num, correct, answer, is_multi=True)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
@@ -300,55 +299,28 @@ def answer_multi():
 @app.route('/game/result_multi')
 @login_required
 def result_multi():
-    # 結果内容
-    # todo:logic最適化を検討する
-
-    # 正解曲の内容をダンプ
     correct_songs = session['correct']
+    game_id = session['id']
+    game_instance = Game.query.filter(Game.id == game_id).first()
+
+    # 正解曲の内容を出力
     song_logic = SongLogic()
     correct_song_list = song_logic.dump_correct_songs_list(correct_songs)
 
-    # Logを集計してGameのgold_user...bronze_scoreをupdateする
-    # Gameから参加ユーザーのidを取得する
-    game_users = []
-    game_instance = Game.query.filter(Game.id == session['id']).first()
-    for i in range(1, 6):
-        attr_name = "entry_user" + str(i)
-        user_id = getattr(game_instance, attr_name)
-        if user_id != None:
-            game_users.append(user_id)
+    # 参加したuserのidを取得
+    game_logic = GameLogic()
+    users_id_list = game_logic.fetch_users_id(game_id, game_instance)
 
-    # dictで合計得点を集める{user_id: sum_score}
-    score_dict = {}
-    for game_user in game_users:
-        score_dict[game_user] = 0
+    # ユーザーごとの得点を集計
+    log_logic = LogLogic()
+    order_score = log_logic.calc_score(game_id, users_id_list)
 
-    # 取得した参加user_idごとに得点を計算
-    log_records = Log.query.filter(Log.game_id == session['id']).all()
-    for record in log_records:
-        if record.user_id in game_users:
-            score_dict[record.user_id] += record.score
+    # 発表用にユーザー名と得点を対応させる
+    user_logic = UserLogic()
+    display_rank = user_logic.bind_name_score(users_id_list, order_score)
 
-    order_score = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)
-
-    # Gameのgold_user...bronze_scoreをupdateする
-    grade_name = ['gold_user', 'silver_user', 'bronze_user']
-    grade_score = ['gold_score', 'silver_score', 'bronze_score']
-
-    for i, j in enumerate(order_score):
-        setattr(game_instance, grade_name[i], j[0])
-        setattr(game_instance, grade_score[i], j[1])
-
-    game_instance.modified_at = datetime.now()
-    db.session.add(game_instance)
-    db.session.commit()
-
-    # ユーザー名と正解数を一致させる
-    # Userから参加ユーザーの名前を取得
-    user_id_name = User.query.with_entities(User.id, User.username).filter(User.id.in_(game_users)).order_by(
-        User.id).all()
-    display_rank = {name: value for id, name in user_id_name for id2, value in score_dict.items() if id == id2}
-    display_rank = sorted(display_rank.items(), key=lambda x: x[1], reverse=True)
+    # Gameのゴールド、シルバー、ブロンズ内容をupdate
+    game_logic.update_game(order_score, game_instance)
 
     game = {
         'judge': session['judge'],
@@ -430,7 +402,6 @@ def question():
 
 @app.route('/game/record_log', methods=['POST'])
 def record_log():
-    is_multi = False
     num = session['num']
     answer = int(request.form['answer'])
     correct = session['correct'][num - 1]
@@ -440,7 +411,7 @@ def record_log():
         user_id = current_user.id
 
     log_logic = LogLogic()
-    judge = log_logic.create_log(is_multi, user_id, game_id, num, correct, answer)
+    judge = log_logic.create_log(user_id, game_id, num, correct, answer)
 
     session['answer'].append(answer)
     session['judge'].append(judge)

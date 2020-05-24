@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from introdon import db
-from introdon.views.config_introdon import MAX_QUESTION, MAX_SELECT
+from introdon.views.config_introdon import *
 
 
 class Game(db.Model):
@@ -218,3 +218,30 @@ class GameLogic:
 
         self.game_id = this_game.id
         return self.game_id
+
+    def fetch_users_id(self, game_id: int, game_instance):
+        # game_idから参加ユーザーのidを取得
+        users_id_list = []
+        for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
+            attr_name = "entry_user" + str(i)
+            user_id = getattr(game_instance, attr_name)
+            if user_id != None:
+                users_id_list.append(user_id)
+
+        return users_id_list
+
+    def update_game(self, order_score, game_instance):
+        grade_name = ['gold_user', 'silver_user', 'bronze_user']
+        grade_score = ['gold_score', 'silver_score', 'bronze_score']
+
+        for i, j in enumerate(order_score):
+            setattr(game_instance, grade_name[i], j[0])
+            setattr(game_instance, grade_score[i], j[1])
+
+        game_instance.modified_at = datetime.now()
+        db.session.add(game_instance)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise

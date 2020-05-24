@@ -31,3 +31,13 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return '<Entry id:{} username:{}>'.format(self.id, self.username)
+
+
+class UserLogic():
+    def bind_name_score(self, users_id_list, order_score):
+        user_id_name = User.query.with_entities(User.id, User.username).filter(User.id.in_(users_id_list)).order_by(
+            User.id).all()
+        display_rank = {name: value for id, name in user_id_name for id2, value in order_score if id == id2}
+        display_rank = sorted(display_rank.items(), key=lambda x: x[1], reverse=True)
+
+        return display_rank

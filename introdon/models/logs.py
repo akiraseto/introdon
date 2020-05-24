@@ -32,7 +32,7 @@ class Log(db.Model):
 
 
 class LogLogic:
-    def create_log(self, is_multi: bool, user_id: int, game_id: int, num: int, correct: int, answer: int):
+    def create_log(self, user_id: int, game_id: int, num: int, correct: int, answer: int, is_multi=False):
         judge = 0
         score = 0
 
@@ -66,6 +66,26 @@ class LogLogic:
             correct_song_id=correct
         )
         db.session.add(this_log)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
+        finally:
+            db.session.close()
 
         return judge
+
+    def calc_score(self, game_id: int, users_id_list: list):
+        score_dict = {}
+        for game_user in users_id_list:
+            score_dict[game_user] = 0
+
+        # 取得した参加user_idごとに得点を計算
+        log_records = Log.query.filter(Log.game_id == game_id).all()
+        for record in log_records:
+            if record.user_id in users_id_list:
+                score_dict[record.user_id] += record.score
+
+        order_score = sorted(score_dict.items(), key=lambda x: x[1], reverse=True)
+        return order_score
