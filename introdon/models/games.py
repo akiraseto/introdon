@@ -245,3 +245,33 @@ class GameLogic:
         except:
             db.session.rollback()
             raise
+
+    def participate_in_game(self, latest_game, user_id):
+        for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
+            if not getattr(latest_game, 'entry_user' + str(i)):
+                setattr(latest_game, 'entry_user' + str(i), user_id)
+                break
+
+        latest_game.modified_at = datetime.now()
+        db.session.add(latest_game)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
+
+    def fetch_songs_id(self, latest_game):
+        correct_id = []
+        select_id = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
+
+        for i in range(MAX_QUESTION):
+            attr_name = "question" + str(i + 1) + "_correct_song_id"
+            id = getattr(latest_game, attr_name)
+            correct_id.append(id)
+
+            for j in range(MAX_SELECT):
+                attr_name = "question" + str(i + 1) + "_select" + str(j + 1) + "_song_id"
+                id = getattr(latest_game, attr_name)
+                select_id[i][j] = id
+
+        return correct_id, select_id

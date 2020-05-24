@@ -18,41 +18,26 @@ from introdon.views.form import SettingForm
 @app.route('/game/setting_multi')
 @login_required
 def setting_multi():
-    # todo:logic最適化を検討する
-    # 1人目:gameRecord作成 2人目以降:gameRecordをupdateしてstart_multiにredirect
-    latest_game = Game.query.order_by(Game.id.desc()).first()
+    # 1人目:gameを新規作成 2人目以降はアップデートしてstart_multiにリダイレクト
     session['creatable'] = True
+    user_id = current_user.id
+
+    latest_game = Game.query.order_by(Game.id.desc()).first()
+    entry_list = [latest_game.entry_user1, latest_game.entry_user2, latest_game.entry_user3, latest_game.entry_user4,
+                  latest_game.entry_user5]
 
     # game_idで受付中のものがある場合(createから数秒以内で、参加人数に空きあり)
     if latest_game != None and timedelta(
-            seconds=START_WAITING_TIME) > datetime.now() - latest_game.created_at and not latest_game.entry_user5:
+            seconds=START_WAITING_TIME) > datetime.now() - latest_game.created_at and not entry_list[-1]:
+        game_logic = GameLogic()
+
         # 自分idのエントリーが無かったら、
-        if current_user.id not in [latest_game.entry_user1, latest_game.entry_user2, latest_game.entry_user3,
-                                   latest_game.entry_user4]:
+        if user_id not in entry_list:
+            # gameにユーザーを追加
+            game_logic.participate_in_game(latest_game, user_id)
 
-            # gameにユーザー追加する
-            for i in range(1, 6):
-                if not getattr(latest_game, 'entry_user' + str(i)):
-                    setattr(latest_game, 'entry_user' + str(i), current_user.id)
-                    break
-
-            latest_game.modified_at = datetime.now()
-            db.session.add(latest_game)
-            db.session.commit()
-
-        # session['id'](game.id) から correct_id、select_idを作成
-        correct_id = []
-        select_id = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
-
-        for i in range(MAX_QUESTION):
-            attr_name = "question" + str(i + 1) + "_correct_song_id"
-            id = getattr(latest_game, attr_name)
-            correct_id.append(id)
-
-            for j in range(MAX_SELECT):
-                attr_name = "question" + str(i + 1) + "_select" + str(j + 1) + "_song_id"
-                id = getattr(latest_game, attr_name)
-                select_id[i][j] = id
+        # game_idからcorrect_id、select_idを取得
+        correct_id, select_id = game_logic.fetch_songs_id(latest_game)
 
         session['id'] = latest_game.id
         session['correct'] = correct_id
@@ -69,7 +54,7 @@ def setting_multi():
 @app.route('/game/start_multi', methods=['POST', 'GET'])
 @login_required
 def start_multi():
-    # todo:logic最適化を検討する
+    # todo: logic最適化を検討する
 
     # 1人目ならgameを作る
     if session['creatable']:
