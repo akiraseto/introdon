@@ -38,15 +38,12 @@ class Song(db.Model):
 
 
 class SongLogic():
-    # todo:リファクタリングする
-    def __init__(self):
-        self.validate = False
-        self.flash = ''
-        self.correct_id = []
-        self.select_id = []
-
-
     def make_question(self, artist, genre, release_from, release_end):
+        validate = True
+        flash = ''
+        correct_id = []
+        select_id = []
+
         release_from = datetime.strptime(release_from, '%Y')
         release_end = datetime.strptime(release_end, '%Y')
 
@@ -61,14 +58,10 @@ class SongLogic():
 
         # 登録曲が少なすぎる場合
         if songs_count < MAX_QUESTION * 4:
-
-            self.validate = False
-            self.flash = '該当曲が少なくて問題を作れません、範囲を広めてください。'
-            return self.validate
+            validate = False
+            flash = '該当曲が少なくて問題を作れません、範囲を広めてください。'
 
         else:
-            self.validate = True
-            self.flash = ''
             # 正解を作る
             correct_id = []
             for i in range(MAX_QUESTION):
@@ -91,13 +84,10 @@ class SongLogic():
                             index = song_instance[random.randint(0, songs_count - 1)]
                             if index not in select_id[i]:
                                 select_id[i][j] = index
-
                                 break
 
-            self.correct_id = correct_id
-            self.select_id = select_id
+        return validate, flash, correct_id, select_id
 
-        return self.validate
 
     def dump_question_song(self, correct, selects, num):
         song_schema = SongSchema()
@@ -105,6 +95,7 @@ class SongLogic():
         select_songs = song_schema.dump(Song.query.filter(Song.id.in_(selects[num - 1])).all(), many=True)
 
         return correct_song, select_songs
+
 
     def dump_correct_songs_list(self, correct_songs):
         correct_song_list = Song.query.filter(Song.id.in_(correct_songs)).all()
@@ -114,6 +105,7 @@ class SongLogic():
         correct_song_list = song_schema.dump(correct_song_list, many=True)
 
         return correct_song_list
+
 
     def add_song(self, term, attribute=None, limit=50):
         params = {
@@ -128,14 +120,14 @@ class SongLogic():
 
         # api接続
         res = requests.get(ITUNES_URI, params)
-        _status_code = res.status_code
-        _json = res.json()
+        status_code = res.status_code
+        json = res.json()
 
         validate = False
-        if _status_code == 200:
+        if status_code == 200:
             # すでに曲が登録している場合は省く
             track_ids = []
-            for result in _json['results']:
+            for result in json['results']:
                 track_ids.append(result['trackId'])
 
             duplicate = Song.query.with_entities(Song.track_id).filter(Song.track_id.in_(track_ids)).all()
@@ -145,7 +137,7 @@ class SongLogic():
             print('duplicateTrackId: ', dup_track_id)
 
             items = []
-            for result in _json['results']:
+            for result in json['results']:
                 if result['trackId'] not in dup_track_id:
                     dt = result['releaseDate']
                     dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
@@ -170,7 +162,7 @@ class SongLogic():
                 db.session.rollback()
                 raise
 
-        return validate, _status_code
+        return validate, status_code
 
 
 class SongSchema(ma.SQLAlchemyAutoSchema):

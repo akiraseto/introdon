@@ -198,13 +198,7 @@ class Game(db.Model):
 
 
 class GameLogic:
-    # todo:リファクタリングする
-    def __init__(self):
-        self.game_id = None
-        self.created_at = None
-
     def create_game(self, correct_id: int, select_id: int, user_id: int):
-        # song_idにしてGame tableに保存
         records = {}
         for i in range(MAX_QUESTION):
             records["question" + str(i + 1) + "_correct_song_id"] = correct_id[i]
@@ -216,14 +210,15 @@ class GameLogic:
 
         this_game = Game(**records)
         db.session.add(this_game)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
 
-        self.created_at = this_game.created_at
-        self.game_id = this_game.id
-        return self.game_id
+        return this_game.id, this_game.created_at
 
-    def fetch_users_id(self, game_id: int, game_instance):
-        # game_idから参加ユーザーのidを取得
+    def fetch_users_id(self, game_instance):
         users_id_list = []
         for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
             attr_name = "entry_user" + str(i)
