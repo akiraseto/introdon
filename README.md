@@ -9,7 +9,7 @@ gunicorn
 MySQL
 
 # itunes api
-https://itunes.apple.com/search?
+https://itunes.apple.com/search
 
 sqlalcemmyが必要とする
 conda install pymysql

@@ -1,15 +1,14 @@
-import random
+from datetime import datetime
 from datetime import datetime
 from datetime import timedelta
 
-import requests
 from flask import redirect, url_for, render_template, flash, session, request
 from flask_login import current_user, login_required
 
-from introdon import app, db
+from introdon import app
 from introdon.models.games import Game, GameLogic
 from introdon.models.logs import LogLogic
-from introdon.models.songs import Song, SongLogic
+from introdon.models.songs import SongLogic
 from introdon.models.users import UserLogic
 from introdon.views.config_introdon import *
 from introdon.views.form import SettingForm
@@ -20,6 +19,7 @@ from introdon.views.form import SettingForm
 def setting_multi():
     # 1人目:gameを新規作成 2人目以降はアップデートしてstart_multiにリダイレクト
     session['creatable'] = True
+    form = SettingForm()
     user_id = current_user.id
 
     latest_game = Game.query.order_by(Game.id.desc()).first()
@@ -48,7 +48,7 @@ def setting_multi():
         # start_multiにリダイレクト
         return redirect(url_for('start_multi'))
 
-    return render_template('games/setting_multi.html')
+    return render_template('games/setting_multi.html', form=form)
 
 
 @app.route('/game/start_multi', methods=['POST', 'GET'])
@@ -58,39 +58,28 @@ def start_multi():
 
     # 1人目ならgameを作る
     if session['creatable']:
+        form = SettingForm()
+        artist = form.artist.data
+        genre = form.genre.data
+        release_from = form.release_from.data
+        release_end = form.release_end.data
+        user_id = current_user.id
 
-        # 曲の絞り込み機能
-        artist = request.form['artist']
-        genre = request.form['genre']
-        release_from = request.form['release_from']
-        release_end = request.form['release_end']
+        song_logic = SongLogic()
 
-        release_from = datetime.strptime(release_from, '%Y')
-        release_end = datetime.strptime(release_end, '%Y')
+        # 1度ループ 曲チェック=>追加のため
+        count_loop = 0
+        while count_loop < 2:
+            # クイズを作る
+            song_logic.make_question(artist, genre, release_from, release_end)
 
-        # 曲を追加したかチェック
-        no_add_song = 0
-        while no_add_song < 2:
-
-            song_instance = Song.query.with_entities(Song.id).filter(Song.artist.like('%' + artist + '%'),
-                                                                     Song.genre.like('%' + genre + '%'),
-                                                                     Song.release_date >= release_from,
-                                                                     Song.release_date < release_end).all()
-            song_instance = [value[0] for value in song_instance]
-
-            # gameをgenerateしてDBに保存する
-            # レコード数をカウント
-            songs_count = len(song_instance)
-
-            if songs_count >= MAX_QUESTION * 4:
+            # クイズを作れた場合
+            if song_logic.validate:
                 break
 
-            # 登録曲が少なすぎる場合
-            if no_add_song < 1:
-
-                ITUNES_URI = 'https://itunes.apple.com/search'
-
-                # termを作る
+            # クイズを作れない場合
+            # ループ 初回
+            if count_loop < 1:
                 term = ''
                 if artist and genre:
                     term = artist + "+" + genre
@@ -99,104 +88,28 @@ def start_multi():
                 elif not artist and genre:
                     term = genre
 
-                params = {
-                    'media': 'music',
-                    'country': 'jp',
-                    'lang': 'ja_jp',
-                    'term': term,
-                    'limit': 50
-                }
+                # itunesからDBに曲追加
+                song_logic.add_song(term)
+                count_loop += 1
 
-                res = requests.get(ITUNES_URI, params)
-                _status_code = res.status_code
-                _json = res.json()
-
-                if _status_code == 200:
-                    # すでに曲が登録している場合は省く
-                    track_ids = []
-                    for result in _json['results']:
-                        track_ids.append(result['trackId'])
-
-                    duplicate = Song.query.with_entities(Song.track_id).filter(Song.track_id.in_(track_ids)).all()
-                    dup_track_id = []
-                    for dup in duplicate:
-                        dup_track_id.append(dup[0])
-                    print('duplicateTrackId: ', dup_track_id)
-
-                    items = []
-                    for result in _json['results']:
-                        if result['trackId'] not in dup_track_id:
-                            dt = result['releaseDate']
-                            dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
-
-                            item = Song(
-                                track=result['trackName'],
-                                track_id=result['trackId'],
-                                artist=result['artistName'],
-                                artist_id=result['artistId'],
-                                genre=result['primaryGenreName'],
-                                jacket_img=result['artworkUrl100'],
-                                preview=result['previewUrl'],
-                                release_date=dt
-                            )
-                            items.append(item)
-
-                    db.session.add_all(items)
-                    db.session.commit()
-
-                no_add_song += 1
+            # ループ済みなら抜ける
             else:
                 break
 
-        # 登録曲が少なすぎる場合
-        if songs_count < MAX_QUESTION * 4:
-
-            flash('該当曲が少なくて問題を作れません、範囲を広めてください。')
-            return render_template('games/setting_multi.html')
+        # ループ後
+        # クイズが作れなかった場合
+        if not song_logic.validate:
+            flash(song_logic.flash)
+            return render_template('games/setting_multi.html', form=form)
 
         else:
-            # 正解を作る
-            correct_id = []
-            for i in range(MAX_QUESTION):
-                while True:
-                    index = random.randint(0, songs_count - 1)
-                    if index not in correct_id:
-                        correct_id.append(index)
-                        break
-            correct_id = [song_instance[i] for i in correct_id]
+            game_logic = GameLogic()
+            game_logic.create_game(song_logic.correct_id, song_logic.select_id, user_id)
 
-            # 選択肢を作成
-            select_id = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
-
-            for i in range(MAX_QUESTION):
-                rand_index = random.randint(0, MAX_SELECT - 1)
-                select_id[i][rand_index] = correct_id[i]
-                for j in range(MAX_SELECT):
-                    if select_id[i][j] == 0:
-                        while True:
-                            index = song_instance[random.randint(0, songs_count - 1)]
-                            if index not in select_id[i]:
-                                select_id[i][j] = index
-
-                                break
-
-            # song_idにしてGame tableに保存
-            records = {}
-            for i in range(MAX_QUESTION):
-                records["question" + str(i + 1) + "_correct_song_id"] = correct_id[i]
-                for j in range(MAX_SELECT):
-                    records["question" + str(i + 1) + "_select" + str(j + 1) + "_song_id"] = select_id[i][j]
-
-            records["entry_user1"] = current_user.id
-
-            this_game = Game(**records)
-            db.session.add(this_game)
-            db.session.commit()
-
-            session['id'] = this_game.id
-            session['correct'] = correct_id
-            session['select'] = select_id
-            session['created_timestamp'] = datetime.timestamp(this_game.created_at)
+            session['id'] = game_logic.game_id
+            session['correct'] = song_logic.correct_id
+            session['select'] = song_logic.select_id
+            session['created_timestamp'] = datetime.timestamp(game_logic.created_at)
             session['creatable'] = False
 
     session['num'] = 1

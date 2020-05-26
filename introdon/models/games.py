@@ -198,8 +198,10 @@ class Game(db.Model):
 
 
 class GameLogic:
+    # todo:リファクタリングする
     def __init__(self):
         self.game_id = None
+        self.created_at = None
 
     def create_game(self, correct_id: int, select_id: int, user_id: int):
         # song_idにしてGame tableに保存
@@ -216,6 +218,7 @@ class GameLogic:
         db.session.add(this_game)
         db.session.commit()
 
+        self.created_at = this_game.created_at
         self.game_id = this_game.id
         return self.game_id
 
