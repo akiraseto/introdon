@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from introdon import db
+from introdon.views.config_introdon import *
 
 
 class Game(db.Model):
@@ -194,3 +195,81 @@ class Game(db.Model):
 
     def __repr__(self):
         return '<Entry id:{}>'.format(self.id)
+
+
+class GameLogic:
+    def create_game(self, correct_id: int, select_id: int, user_id: int):
+        records = {}
+        for i in range(MAX_QUESTION):
+            records["question" + str(i + 1) + "_correct_song_id"] = correct_id[i]
+            for j in range(MAX_SELECT):
+                records["question" + str(i + 1) + "_select" + str(j + 1) + "_song_id"] = select_id[i][j]
+
+        if user_id:
+            records["entry_user1"] = user_id
+
+        this_game = Game(**records)
+        db.session.add(this_game)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
+
+        return this_game.id, this_game.created_at
+
+    def fetch_users_id(self, game_instance):
+        users_id_list = []
+        for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
+            attr_name = "entry_user" + str(i)
+            user_id = getattr(game_instance, attr_name)
+            if user_id != None:
+                users_id_list.append(user_id)
+
+        return users_id_list
+
+    def update_game(self, order_score, game_instance):
+        grade_name = ['gold_user', 'silver_user', 'bronze_user']
+        grade_score = ['gold_score', 'silver_score', 'bronze_score']
+
+        for i, j in enumerate(order_score):
+            setattr(game_instance, grade_name[i], j[0])
+            setattr(game_instance, grade_score[i], j[1])
+
+        game_instance.modified_at = datetime.now()
+        db.session.add(game_instance)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
+
+    def participate_in_game(self, latest_game, user_id):
+        for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
+            if not getattr(latest_game, 'entry_user' + str(i)):
+                setattr(latest_game, 'entry_user' + str(i), user_id)
+                break
+
+        latest_game.modified_at = datetime.now()
+        db.session.add(latest_game)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            raise
+
+    def fetch_songs_id(self, latest_game):
+        correct_id = []
+        select_id = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
+
+        for i in range(MAX_QUESTION):
+            attr_name = "question" + str(i + 1) + "_correct_song_id"
+            id = getattr(latest_game, attr_name)
+            correct_id.append(id)
+
+            for j in range(MAX_SELECT):
+                attr_name = "question" + str(i + 1) + "_select" + str(j + 1) + "_song_id"
+                id = getattr(latest_game, attr_name)
+                select_id[i][j] = id
+
+        return correct_id, select_id

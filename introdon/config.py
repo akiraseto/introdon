@@ -10,3 +10,7 @@ SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{user}:{password}@{host}/{db_name}'.f
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 DEBUG = True
 SECRET_KEY = os.urandom(24)
+
+SQLALCHEMY_ENGINE_OPTIONS = {
+    'pool_pre_ping': True
+}

@@ -4,17 +4,16 @@
   <div class="container text-center">
     <h1 class="display-3">クイズ! Intro Don!!</h1>
 
-
-    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'" type=“button”>
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'">
       ひとりで遊ぶ
     </button>
 
-    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_multi') }}'" type=“button”>
+    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_multi') }}'">
       みんなで遊ぶ
     </button>
 
 
-    <p>{{ user.name }}</p>
+    <h2>{{ user.name }}</h2>
     <table class="table">
       <tr>
         <th colspan="3">成績</th>

@@ -1,26 +1,11 @@
 from flask import redirect, url_for, render_template, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from flask_wtf import FlaskForm
 from werkzeug.security import generate_password_hash, check_password_hash
-from wtforms import StringField, PasswordField
-from wtforms.validators import InputRequired, Length, Regexp
 
 from introdon import app, db
 from introdon.models.logs import Log
 from introdon.models.users import User
-
-
-class UserForm(FlaskForm):
-    # 半角英数のみ
-    message_reg = 'Must input half-width English numbers and characters'
-    message_len = 'Must be between 4 and 10 characters.'
-
-    username = StringField('username', validators=[InputRequired('A username is required!'),
-                                                   Regexp("^[a-zA-Z0-9]+$", message=message_reg),
-                                                   Length(min=4, max=10, message=message_len)])
-    password = PasswordField('password', validators=[InputRequired('A password is required!'),
-                                                     Regexp("^[a-zA-Z0-9]+$", message=message_reg),
-                                                     Length(min=4, max=10, message=message_len)])
+from introdon.views.form import UserForm
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -68,7 +53,7 @@ def create_user():
 
             login_user(user)
 
-            flash('Welcome "{}"!!'.format(current_user.username))
+            flash('登録されました! Welcome "{}"!!'.format(current_user.username))
             return redirect(url_for('entrance'))
 
         except Exception as e:
