@@ -27,7 +27,7 @@ def index():
             return redirect(url_for('entrance'))
 
         else:
-            flash('Please check your login details and try again.')
+            flash('登録が見当たりません。確認の上、再度ログインしてください。')
 
     return render_template('users/index.html', form=form)
 
