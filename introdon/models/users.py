@@ -49,10 +49,10 @@ class UserLogic():
 
         return display_rank
 
-    def add_score_to_user(self, user_id: int, score: int):
-        """スコアをユーザーに追加する
+    def add_record_to_user(self, judge: int, user_id: int, num: int, score: int):
+        """logの成績をユーザーに追加する
 
-        logの得点をユーザーの総得点に追加する
+        Userの得点、ゲーム数、回答数、正解数、正解率を追加変更する
 
         ----------
         :return: bool
@@ -61,7 +61,23 @@ class UserLogic():
         validate = False
         if user_id:
             update_user = User.query.filter(User.id == user_id).first()
-            update_user.sum_score += score
+            update_user.sum_answer += 1
+
+            if num == 10:
+                update_user.sum_game += 1
+
+            if judge:
+                update_user.sum_correct += 1
+                update_user.sum_score += score
+
+            try:
+                rate = round(update_user.sum_correct / update_user.sum_answer, 2)
+            except Exception as e:
+                rate = 0
+
+            update_user.rate = rate
+            update_user.modified_at = datetime.now()
+
             db.session.add(update_user)
             try:
                 db.session.commit()

@@ -3,7 +3,6 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from introdon import app, db
-from introdon.models.logs import Log
 from introdon.models.users import User
 from introdon.views.form import UserForm
 
@@ -69,35 +68,16 @@ def create_user():
 @app.route('/user/entrance')
 @login_required
 def entrance():
-    # logからquery
-    log = Log.query.filter(Log.user_id == current_user.id).all()
-    sum_answer = len(log)
-    sum_correct = [value.judge for value in log].count(1)
-    sum_game = [value.question_num for value in log].count(10)
-    total_score = sum([value.score for value in log])
-
-    try:
-        rate = round(sum_correct / sum_answer, 2)
-    except Exception as e:
-        rate = 0
+    user = User.query.filter(User.id == current_user.id).first()
 
     user = {
-        'name': current_user.username,
-        'sum_game': sum_game,
-        'sum_answer': sum_answer,
-        'sum_correct': sum_correct,
-        'rate': rate,
-        'total_score': total_score
+        'name': user.username,
+        'sum_game': user.sum_game,
+        'sum_answer': user.sum_answer,
+        'sum_correct': user.sum_correct,
+        'rate': user.rate,
+        'sum_score': user.sum_score
     }
-
-    # user成績を更新
-    update_user = User.query.filter(User.id == current_user.id).first()
-    update_user.sum_game = sum_game
-    update_user.sum_answer = sum_answer
-    update_user.sum_correct = sum_correct
-    update_user.rate = rate
-    db.session.add(update_user)
-    db.session.commit()
 
     return render_template('users/entrance.html', user=user)
 

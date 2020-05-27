@@ -173,7 +173,11 @@ def record_log_multi():
         user_id = current_user.id
 
     log_logic = LogLogic()
-    judge = log_logic.create_log(user_id, game_id, num, correct, answer, is_multi=True)
+    judge, score = log_logic.create_log(user_id, game_id, num, correct, answer, is_multi=True)
+
+    # UserDBにスコアをupdate
+    user_logic = UserLogic()
+    user_logic.add_record_to_user(judge, user_id, num, score)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
@@ -317,7 +321,7 @@ def record_log():
 
     # UserDBにスコアをupdate
     user_logic = UserLogic()
-    user_logic.add_score_to_user(user_id, score)
+    user_logic.add_record_to_user(judge, user_id, num, score)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
