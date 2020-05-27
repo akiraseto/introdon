@@ -33,6 +33,14 @@ class Log(db.Model):
 
 class LogLogic:
     def create_log(self, user_id: int, game_id: int, num: int, correct: int, answer: int, is_multi=False):
+        """logをDBに保存
+
+         1人プレイ、マルチプレイ切り分けて点数を付与の上、DBにログを保存
+
+         ----------
+         :return: tuple(judge:int, score:int)
+        """
+
         judge = 0
         score = 0
 
@@ -74,9 +82,13 @@ class LogLogic:
         finally:
             db.session.close()
 
-        return judge
+        return judge, score
 
     def calc_score(self, game_id: int, users_id_list: list):
+        """ユーザーごとに得点を集計
+
+        集計した得点をuser_idとセットにしてdictで返す
+        """
         score_dict = {}
         for game_user in users_id_list:
             score_dict[game_user] = 0

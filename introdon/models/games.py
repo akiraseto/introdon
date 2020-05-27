@@ -219,6 +219,10 @@ class GameLogic:
         return this_game.id, this_game.created_at
 
     def fetch_users_id(self, game_instance):
+        """ゲーム参加したuserのidを取得
+
+        user_idをlistにして返す
+        """
         users_id_list = []
         for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
             attr_name = "entry_user" + str(i)
@@ -229,6 +233,10 @@ class GameLogic:
         return users_id_list
 
     def update_game(self, order_score, game_instance):
+        """Game内容を更新
+
+        順位を追加して、GameのDBをupdate
+        """
         grade_name = ['gold_user', 'silver_user', 'bronze_user']
         grade_score = ['gold_score', 'silver_score', 'bronze_score']
 

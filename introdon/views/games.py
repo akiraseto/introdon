@@ -1,5 +1,4 @@
 from datetime import datetime
-from datetime import datetime
 from datetime import timedelta
 
 from flask import redirect, url_for, render_template, session, request
@@ -174,7 +173,11 @@ def record_log_multi():
         user_id = current_user.id
 
     log_logic = LogLogic()
-    judge = log_logic.create_log(user_id, game_id, num, correct, answer, is_multi=True)
+    judge, score = log_logic.create_log(user_id, game_id, num, correct, answer, is_multi=True)
+
+    # UserDBにスコアをupdate
+    user_logic = UserLogic()
+    user_logic.add_record_to_user(judge, user_id, num, score)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
@@ -304,6 +307,7 @@ def question():
 
 @app.route('/game/record_log', methods=['POST'])
 def record_log():
+    # todo: ユーザースコア計算をLog追加ごとに変更
     num = session['num']
     answer = int(request.form['answer'])
     correct = session['correct'][num - 1]
@@ -313,7 +317,11 @@ def record_log():
         user_id = current_user.id
 
     log_logic = LogLogic()
-    judge = log_logic.create_log(user_id, game_id, num, correct, answer)
+    judge, score = log_logic.create_log(user_id, game_id, num, correct, answer)
+
+    # UserDBにスコアをupdate
+    user_logic = UserLogic()
+    user_logic.add_record_to_user(judge, user_id, num, score)
 
     session['answer'].append(answer)
     session['judge'].append(judge)

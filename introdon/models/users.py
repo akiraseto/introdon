@@ -14,17 +14,19 @@ class User(UserMixin, db.Model):
     sum_game = db.Column(db.Integer)
     sum_answer = db.Column(db.Integer)
     sum_correct = db.Column(db.Integer)
+    sum_score = db.Column(db.Integer)
     rate = db.Column(db.Float)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
     modified_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
-    def __init__(self, username, password, admin=0, sum_game=0, sum_answer=0, sum_correct=0, rate=0):
+    def __init__(self, username, password, admin=0, sum_game=0, sum_answer=0, sum_correct=0, sum_score=0, rate=0):
         self.username = username
         self.password = password
         self.admin = admin
         self.sum_game = sum_game
         self.sum_answer = sum_answer
         self.sum_correct = sum_correct
+        self.sum_score = sum_score
         self.rate = rate
         self.created_at = datetime.now()
         self.modified_at = datetime.now()
@@ -35,9 +37,53 @@ class User(UserMixin, db.Model):
 
 class UserLogic():
     def bind_name_score(self, users_id_list, order_score):
+        """Usernameとscoreをセットにする
+
+        scoreが高い順にソートしたリストを返す
+        :rtype: list
+        """
         user_id_name = User.query.with_entities(User.id, User.username).filter(User.id.in_(users_id_list)).order_by(
             User.id).all()
         display_rank = {name: value for id, name in user_id_name for id2, value in order_score if id == id2}
         display_rank = sorted(display_rank.items(), key=lambda x: x[1], reverse=True)
 
         return display_rank
+
+    def add_record_to_user(self, judge: int, user_id: int, num: int, score: int):
+        """logの成績をユーザーに追加する
+
+        Userの得点、ゲーム数、回答数、正解数、正解率を追加変更する
+
+        ----------
+        :return: bool
+        """
+
+        validate = False
+        if user_id:
+            update_user = User.query.filter(User.id == user_id).first()
+            update_user.sum_answer += 1
+
+            if num == 10:
+                update_user.sum_game += 1
+
+            if judge:
+                update_user.sum_correct += 1
+                update_user.sum_score += score
+
+            try:
+                rate = round(update_user.sum_correct / update_user.sum_answer, 2)
+            except Exception as e:
+                rate = 0
+
+            update_user.rate = rate
+            update_user.modified_at = datetime.now()
+
+            db.session.add(update_user)
+            try:
+                db.session.commit()
+                validate = True
+            except:
+                db.session.rollback()
+                raise
+
+        return validate
