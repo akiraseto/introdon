@@ -31,11 +31,7 @@
 
     <div>
       {% if game['num'] == 10 %}
-        <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('result_multi') }}'"
-        >
-          結果発表
-        </button>
-
+        <h2>結果発表まで、あと<span id="countDown"></span>秒</h2>
       {% else %}
         <h2>次の問題まで、あと<span id="countDown"></span>秒</h2>
       {% endif %}
@@ -75,8 +71,13 @@
           console.log(remained_time);
           $("#countDown").text(remained_time);
 
-        } else if (remained_time <= display_time * -1 && !jump && game_num !== 10) {
+        } else if (remained_time <= display_time * -1 && !jump) {
           jump = true;
+
+          if (game_num === 10) {
+            location.href = "{{ url_for('result_multi') }}";
+          }
+
           location.href = "{{ url_for('question_multi') }}";
         }
 

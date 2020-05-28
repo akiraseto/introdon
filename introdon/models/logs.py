@@ -32,12 +32,18 @@ class Log(db.Model):
 
 
 class LogLogic:
-    def create_log(self, user_id: int, game_id: int, num: int, correct: int, answer: int, is_multi=False):
+    def create_log(self, user_id: int, game_id: int, num: int, correct: int, answer: int, is_multi=False) -> tuple:
         """logをDBに保存
 
          1人プレイ、マルチプレイ切り分けて点数を付与の上、DBにログを保存
 
          ----------
+         :param user_id: ユーザーID
+         :param game_id: ゲームID
+         :param num: 何問目か
+         :param correct: 正解song_id
+         :param answer: 回答song_id
+         :param is_multi: マルチ対戦モードか
          :return: tuple(judge:int, score:int)
         """
 

@@ -23,8 +23,6 @@
               <td>{{ loop.index }}位</td>
             {% endif %}
 
-
-
             {% if rank[0] == current_user.username %}
               <td><span class="text-primary font-weight-bold">{{ current_user.username }}さん</span></td>
             {% else %}
@@ -36,7 +34,6 @@
         {% endfor %}
       </table>
     </div>
-
 
     <h1 class="display-5">{{ current_user.username }}さんの正解数 {{ game.count_judge }} /10問</h1>
 
@@ -74,7 +71,19 @@
 
 
   <script type="text/javascript">
-    const sound_question = new Audio("{{ url_for('static', filename='cheer.mp3') }}");
+    let rank = {{ game.display_rank |tojson }};
+    const username = String({{ current_user.username |string }});
+    const worst = rank.pop()
+    let sound_question = null
+
+    if (username === rank[0][0]) {
+      sound_question = new Audio("{{ url_for('static', filename='big-cheer.mp3') }}");
+    } else if (username === worst[0]) {
+      sound_question = new Audio("{{ url_for('static', filename='stupid.mp3') }}");
+    } else {
+      sound_question = new Audio("{{ url_for('static', filename='cheer.mp3') }}");
+    }
+
     sound_question.volume = 0.3
     sound_question.play();
 
