@@ -36,7 +36,7 @@ class User(UserMixin, db.Model):
 
 
 class UserLogic():
-    def bind_name_score(self, users_id_list, order_score):
+    def bind_name_score(self, users_id_list, order_score) -> list:
         """Usernameとscoreをセットにする
 
         scoreが高い順にソートしたリストを返す
@@ -49,7 +49,7 @@ class UserLogic():
 
         return display_rank
 
-    def add_record_to_user(self, judge: int, user_id: int, num: int, score: int):
+    def add_record_to_user(self, judge: int, user_id: int, num: int, score: int) -> bool:
         """logの成績をユーザーに追加する
 
         Userの得点、ゲーム数、回答数、正解数、正解率を追加変更する
@@ -87,3 +87,17 @@ class UserLogic():
                 raise
 
         return validate
+
+    def fetch_user_records(self, users_id_list: list) -> list:
+        """ユーザーの累積成績を返す
+
+        user_idリストを渡すと、各ユーザーの成績をlistにして返す
+        """
+
+        users_record_list = User.query.with_entities(
+            User.username,
+            User.sum_score,
+            User.rate,
+        ).filter(User.id.in_(users_id_list)).all()
+
+        return users_record_list
