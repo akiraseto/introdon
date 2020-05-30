@@ -1,7 +1,7 @@
 from datetime import datetime
 from datetime import timedelta
 
-from flask import redirect, url_for, render_template, session, request
+from flask import redirect, url_for, render_template, session, request, flash, jsonify
 from flask_login import current_user, login_required
 
 from introdon import app
@@ -64,7 +64,7 @@ def start_multi():
 
         song_logic = SongLogic()
         validate_make_q = None
-        flash = ''
+        flash_message = ''
         correct_id = []
         select_id = []
 
@@ -72,8 +72,9 @@ def start_multi():
         count_loop = 0
         while count_loop < 2:
             # クイズを作る
-            validate_make_q, flash, correct_id, select_id = song_logic.make_question(artist, genre, release_from,
-                                                                                     release_end)
+            validate_make_q, flash_message, correct_id, select_id = song_logic.make_question(artist, genre,
+                                                                                             release_from,
+                                                                                             release_end)
 
             # クイズを作れた場合
             if validate_make_q:
@@ -101,7 +102,7 @@ def start_multi():
         # ループ後
         # クイズが作れなかった場合
         if not validate_make_q:
-            flash(flash)
+            flash(flash_message)
             return render_template('games/setting_multi.html', form=form)
 
         else:
@@ -122,7 +123,9 @@ def start_multi():
     game = {
         'limit_time': round(session['created_timestamp'] + START_WAITING_TIME),
         'DISPLAY_TIME': DISPLAY_TIME,
-        'game_id': session['id']
+        'game_id': session['id'],
+        'START_WAITING_TIME': START_WAITING_TIME,
+        'MAX_MEMBER': MAX_MEMBER
     }
 
     return render_template('games/start_multi.html', game=game)
@@ -259,8 +262,8 @@ def setting_game():
         release_end = form.release_end.data
 
         song_logic = SongLogic()
-        validate_make_q, flash, correct_id, select_id = song_logic.make_question(artist, genre, release_from,
-                                                                                 release_end)
+        validate_make_q, flash_message, correct_id, select_id = song_logic.make_question(artist, genre, release_from,
+                                                                                         release_end)
 
         if validate_make_q:
             game_logic = GameLogic()
@@ -275,7 +278,7 @@ def setting_game():
             session['correct_song'] = {}
             session['created_timestamp'] = None
         else:
-            flash(flash)
+            flash(flash_message)
             return render_template('games/setting.html', form=form)
 
         return redirect(url_for('question'))
@@ -307,7 +310,6 @@ def question():
 
 @app.route('/game/record_log', methods=['POST'])
 def record_log():
-    # todo: ユーザースコア計算をLog追加ごとに変更
     num = session['num']
     answer = int(request.form['answer'])
     correct = session['correct'][num - 1]
@@ -354,3 +356,17 @@ def result():
     }
 
     return render_template('games/result.html', game=game)
+
+
+@app.route('/game/participating_members')
+def participating_members():
+    game_id = int(request.args.get('game_id'))
+    game_logic = GameLogic()
+
+    game_instance = Game.query.filter(Game.id == game_id).first()
+    users_id_list = game_logic.fetch_users_id(game_instance)
+
+    user_logic = UserLogic()
+    users_record_list = user_logic.fetch_user_records(users_id_list)
+
+    return jsonify(users_record_list)

@@ -1,72 +1,128 @@
 {% extends "layout.html" %}
 {% block body %}
 
-
-  <h1>メンバー受付中</h1>
-  <h2>ゲームID: {{ game.game_id }}</h2>
-
-  <div id="wrap_join">
-    <h3 id="text_limit">締め切りまであと<span id="countDown"></span>秒</h3>
-    <p id="text_join">あそぶメンバー</p>
-    <div id="list_member">
-      <ul>
-        <!--      todo:vue.js導入時にこの部分を作成する。-->
-      </ul>
-    </div>
+  <!-- Vue container -->
+  <div id="app" class="m-5">
+    <mycomp></mycomp>
   </div>
 
+  <!-- template -->
+  {% raw %}
+  <script type="text/x-template" id="mycomp-template">
+    <div>
 
-  <script type="text/javascript">
-    let ready = $(document).ready(function () {
-      let audio = new Audio("{{ url_for('static', filename='timer.m4a') }}");
-      audio.loop = true;
-      audio.play();
+      <h1>ただ今、メンバー受付中・・</h1>
+      <h2>ゲームID: {{ GAME_ID }}</h2>
+      <h3 id="text_limit">締め切りまであと<span id="countDown"></span>秒</h3>
 
-      const display_time = {{ game.DISPLAY_TIME }};
-      const limit_time = {{ game.limit_time}};
-      let jump = false;
+      <table class="table">
+        <thead class="thead-light">
+        <tr>
+          <th colspan="3" class="text-center">参加メンバー</th>
+        </tr>
+        </thead>
+        <tr class="font-weight-bolder">
+          <td>ユーザー名</td>
+          <td>総合スコア</td>
+          <td>正解率</td>
+        </tr>
+        <tr v-for="member in memberData">
+          <td> {{ member[0] }}</td>
+          <td> {{ member[1] }}</td>
+          <td> {{ member[2] }}</td>
+        </tr>
+      </table>
 
-      function update() {
-        $.getJSON('get', function (game) {
-          let html = '<ul>', i, j, id;
-          for (i = 1; i < 5 && (id = game['game']['Game']['entry_user' + i]) !== null; i++) {
-            for (j = 0; j < game['users'].length; j++) {
-              if (game['users'][j]['User']['id'] === id) {
-                html += '<li><span>' + game['users'][j]['User']['username'] + '</span>が参加しました。</li>';
-                break;
-              }
-            }
+    </div>
+  </script>
+  {% endraw %}
+
+  <!-- Vue script -->
+  <script>
+    //template object
+    Vue.component('mycomp', {
+      template: '#mycomp-template',
+      data: function () {
+        return {
+          memberData: null,
+          MAX_MEMBER: {{ game.MAX_MEMBER}},
+          DelayTime: 3,
+          WAITING_TIME: {{ game.START_WAITING_TIME}},
+          TIMER_SOUND_URL: "{{ url_for('static', filename='timer.m4a') }}",
+          GAME_ID: {{ game.game_id }},
+          DISPLAY_TIME: {{ game.DISPLAY_TIME }},
+          LIMIT_TIME: {{ game.limit_time}},
+        }
+      },
+      methods: {
+        countDown: function () {
+          let first_redirect = true;
+          const now = Math.floor(Date.now() / 1000);
+          const remained_time = Math.floor(this.LIMIT_TIME - now, 0);
+
+          if (remained_time > -1) {
+            console.log(remained_time);
+            $("#countDown").text(remained_time);
+
+          } else if (remained_time === this.DISPLAY_TIME * -1 && first_redirect) {
+            first_redirect = false;
+            location.href = "{{ url_for('question_multi') }}";
           }
-          $('#list_member').html(html += '</ul>');
-        });
-      }
 
+          setTimeout(this.countDown, 1000);
+        },
 
-      (function loop() {
-        const now = Math.floor(Date.now() / 1000);
-        const remained_time = Math.floor(limit_time - now, 0);
+        sleep: function (timer) {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve()
+            }, timer)
+          })
+        },
 
-        if (remained_time > -1) {
-          console.log(remained_time);
-          $("#countDown").text(remained_time);
+        getMember: async function () {
+          for (let i = 0; i < this.numOfTime; i++) {
+            await axios.get('/game/participating_members', {
+              params: {
+                game_id: this.GAME_ID
+              }
+            })
+                .then(res => {
+                  this.memberData = res.data
+                  console.log(res.data)
+                })
 
-          // update();
+            if (this.memberData.length === this.MAX_MEMBER) {
+              console.log('満員!')
+              return Promise.resolve(1);
+            }
+            await this.sleep(this.DelayTime * 1000)
+          }
+        },
 
-          // if (remained_time <= 0) {
-          //   $("#text_join").hide();
-          //   $("#text_limit").hide();
-          //   $("#wrap_join #list_member").hide();
-          // }
-
-        } else if (remained_time === display_time * -1 && !jump) {
-          jump = true;
-          location.href = "{{ url_for('question_multi') }}";
+        timerSound: function () {
+          let audio = new Audio(this.TIMER_SOUND_URL);
+          audio.loop = true;
+          audio.play();
         }
 
-        setTimeout(loop, 100);
-      })();
+      },
+      computed: {
+        numOfTime: function () {
+          return this.WAITING_TIME / this.DelayTime
+        }
+
+      },
+      created: function () {
+        this.countDown()
+        this.getMember()
+        this.timerSound()
+      },
     });
 
+    //start Vue.
+    new Vue({
+      el: '#app',
+    });
   </script>
-
 {% endblock %}

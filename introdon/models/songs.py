@@ -40,7 +40,7 @@ class Song(db.Model):
 class SongLogic():
     def make_question(self, artist, genre, release_from, release_end):
         validate = True
-        flash = ''
+        flash_message = ''
         correct_id = []
         select_id = []
 
@@ -59,7 +59,7 @@ class SongLogic():
         # 登録曲が少なすぎる場合
         if songs_count < MAX_QUESTION * 4:
             validate = False
-            flash = '該当曲が少なくて問題を作れません、範囲を広めてください。'
+            flash_message = '該当曲が少なくて問題を作れません、範囲を広めてください。'
 
         else:
             # 正解を作る
@@ -86,7 +86,7 @@ class SongLogic():
                                 select_id[i][j] = index
                                 break
 
-        return validate, flash, correct_id, select_id
+        return validate, flash_message, correct_id, select_id
 
 
     def dump_question_song(self, correct, selects, num):

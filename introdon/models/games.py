@@ -198,7 +198,16 @@ class Game(db.Model):
 
 
 class GameLogic:
-    def create_game(self, correct_id: int, select_id: int, user_id: int):
+    """Game.viewで利用するロジックのまとめ
+
+    Game.viewからのロジックをGame.modelのデータを元に加工して返す
+    """
+
+    def create_game(self, correct_id: int, select_id: int, user_id: int) -> tuple:
+        """新規にGameを作成する
+
+        1人目ユーザーの登録とともに、新規にGame作成し、game_id,作成日を返す
+        """
         records = {}
         for i in range(MAX_QUESTION):
             records["question" + str(i + 1) + "_correct_song_id"] = correct_id[i]
@@ -218,13 +227,13 @@ class GameLogic:
 
         return this_game.id, this_game.created_at
 
-    def fetch_users_id(self, game_instance):
+    def fetch_users_id(self, game_instance: object) -> list:
         """ゲーム参加したuserのidを取得
 
         user_idをlistにして返す
         """
         users_id_list = []
-        for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
+        for i in range(1, MAX_MEMBER + 1):
             attr_name = "entry_user" + str(i)
             user_id = getattr(game_instance, attr_name)
             if user_id != None:
@@ -232,7 +241,7 @@ class GameLogic:
 
         return users_id_list
 
-    def update_game(self, order_score, game_instance):
+    def update_game(self, order_score, game_instance) -> None:
         """Game内容を更新
 
         順位を追加して、GameのDBをupdate
@@ -252,8 +261,12 @@ class GameLogic:
             db.session.rollback()
             raise
 
-    def participate_in_game(self, latest_game, user_id):
-        for i in range(1, NUMBER_OF_PARTICIPANTS + 1):
+    def participate_in_game(self, latest_game, user_id: int) -> None:
+        """Gameにユーザーを参加登録する
+
+        該当のGameインスタンスにユーザーを参加追加させる
+        """
+        for i in range(1, MAX_MEMBER + 1):
             if not getattr(latest_game, 'entry_user' + str(i)):
                 setattr(latest_game, 'entry_user' + str(i), user_id)
                 break
@@ -266,7 +279,11 @@ class GameLogic:
             db.session.rollback()
             raise
 
-    def fetch_songs_id(self, latest_game):
+    def fetch_songs_id(self, latest_game: object) -> tuple:
+        """正解曲と選択肢曲のsong_idのリストを取得
+
+        Gameで使った正解/選択肢曲のidをそれぞれリストにしてタプルで返す
+        """
         correct_id = []
         select_id = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
 
