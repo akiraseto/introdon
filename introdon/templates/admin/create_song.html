@@ -1,6 +1,6 @@
 {% extends 'admin/master.html' %}
 {% import 'admin/lib.html' as lib with context %}
-{% from 'admin/lib.html' import extra with context %} {# backward compatible #}
+{% from 'admin/lib.html' import extra with context %}
 
 {% block head %}
 {{ super() }}
@@ -19,8 +19,6 @@
 </ul>
 {% endblock %}
 
-
-<!--ココに書く-->
 <h1>itunes api 曲情報取得</h1>
 
 <form action="{{ url_for('add_song') }}" class=add-entry method=post>
@@ -46,7 +44,9 @@
     </select>
   </div>
 
-  <button class="btn btn-primary" type="submit">作成</button>
+  <div class="form-group">
+    <button class="btn btn-primary form-control" type="submit">作成</button>
+  </div>
 </form>
 
 {% endblock %}
