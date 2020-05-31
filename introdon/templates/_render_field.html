@@ -1,14 +1,12 @@
 {% macro render_field(field) %}
-  <div class="form-group">
+  <div class="form-group col-4">
     <label for="{{ field.name }}">{{ field.label.text }}</label>
-    <div>
-      {{ field(**kwargs)|safe }}
-      <ul>
-        {% for error in field.errors %}
-          <li style="color:red;">{{ error }}</li>
-        {% endfor %}
-      </ul>
-    </div>
+    {{ field(**kwargs)|safe }}
+    <ul class="list-group list-group-flush text-left small">
+      {% for error in field.errors %}
+        <li class="list-group-item text-danger">{{ error }}</li>
+      {% endfor %}
+    </ul>
   </div>
 
 {% endmacro %}
