@@ -13,11 +13,6 @@
 
 
 {% macro render_set(field) %}
-  <div class="form-group">
     <label for="{{ field.name }}">{{ field.label.text }}</label>
-    <div>
       {{ field(**kwargs)|safe }}
-    </div>
-  </div>
-
 {% endmacro %}
