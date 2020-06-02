@@ -20,7 +20,7 @@
         <form v-bind:action="record_log_url" class="" method=post>
           <div class="row">
 
-            <div v-for="select in select_songs" v-bind:key="select.id" class="col-3">
+            <div v-for="select in select_songs" class="col-3">
               <div class="card h-100 border-none">
 
                 <button class="h-100 alert btn-outline-dark border border-dark align-top" name="answer"
@@ -52,6 +52,7 @@
           game_num: {{ game['num'] }},
           record_log_url: "{{ url_for('record_log') }}",
           select_songs: {{ game['select_song'] |tojson }},
+          correct_song: {{ game.correct_song |tojson }},
           sound_effect_url: "{{ url_for('static', filename='question.mp3') }}",
         }
       },
@@ -64,21 +65,21 @@
           })
         },
 
-        SongSound: async function () {
-          const audio = new Audio("{{game['correct_song'].preview}}#t=3,30");
+        songSound: async function () {
+          const audio = new Audio(this.correct_song.preview + "#t=3,30");
           await this.sleep(2000)
           audio.play();
         },
 
-        SoundEffect: function () {
+        soundEffect: function () {
           let audio = new Audio(this.sound_effect_url);
           audio.play();
         }
 
       },
       created: function () {
-        this.SoundEffect()
-        this.SongSound()
+        this.soundEffect()
+        this.songSound()
       },
     });
 

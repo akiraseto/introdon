@@ -2,7 +2,7 @@
 {% block body %}
 
   <!-- Vue container -->
-  <div id="app" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+  <div id="app">
     <mycomp></mycomp>
   </div>
 
@@ -86,25 +86,25 @@
           })
         },
 
-        SongSound: async function () {
-          const audio = new Audio("{{game['correct_song'].preview}}#t=3,30");
+        songSound: async function () {
+          const audio = new Audio(this.correct_song.preview + "#t=3,30");
           await this.sleep(1000)
           audio.play();
         },
 
-        SoundEffect: function () {
-          let sound_question
+        soundEffect: function () {
+          let sound_effect
           if (this.game_judge === 1) {
-            sound_question = new Audio("{{ url_for('static', filename='right.mp3') }}");
+            sound_effect = new Audio(this.sound_right);
           } else {
-            sound_question = new Audio("{{ url_for('static', filename='wrong.mp3') }}");
+            sound_effect = new Audio(this.sound_wrong);
           }
-          sound_question.play();
+          sound_effect.play();
         }
       },
       created: function () {
-        this.SoundEffect()
-        this.SongSound()
+        this.soundEffect()
+        this.songSound()
       },
     });
 
