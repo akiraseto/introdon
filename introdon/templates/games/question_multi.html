@@ -1,70 +1,117 @@
 {% extends "layout.html" %}
 {% block body %}
 
-  <h3>みんなと遊ぶ</h3>
-
-  <div class="container text-center">
-    <h1 class="display-4">第{{ game['num'] }}問 /10</h1>
-    <h2>あと<span id="countDown"></span>秒</h2>
-
-    <form action="{{ url_for('record_log_multi') }}" class="" method=post>
-      <div class="row px-5">
-
-        {% for select in game['select_song'] %}
-          <div class="col-md-3 mx-auto">
-            <div class="card h-100">
-              <button class="h-100 border-none" name="answer" value="{{ select.id }}">
-                <div class="card-body">
-                  <h5>{{ select.artist }}</h5>
-                  <h5>{{ select.track }}</h5>
-                </div>
-              </button>
-            </div>
-          </div>
-        {% endfor %}
-
-        <button class="timeOverBtn" name="answer" value="0" style="display: none;"></button>
-
-      </div>
-    </form>
-
+  <!-- Vue container -->
+  <div id="app">
+    <mycomp></mycomp>
   </div>
 
-  <script type="text/javascript">
-    $(document).ready(function () {
-      const audio = new Audio("{{game['correct_song'].preview}}#t=3,13");
-      const sound_question = new Audio("{{ url_for('static', filename='question.mp3') }}");
-      sound_question.play();
 
-      const startMusic = () => {
-        audio.play();
-      };
+  <!-- template -->
+  {% raw %}
+  <script type="text/x-template" id="mycomp-template">
+    <div>
+      <h4 class="mb-3"><span class="badge badge-secondary">みんなと対戦モード</span></h4>
 
-      setTimeout(startMusic, 2000);
+      <div class="text-center">
+        <h1>第{{ game_num }}問 /10</h1>
+        <h2>あと<span id="countDown" class="text-danger"></span>秒</h2>
+      </div>
+
+      <div>
+        <form v-bind:action="record_log_multi" class="" method=post>
+          <div class="row">
+
+            <div v-for="select in select_songs" class="col-3">
+              <div class="card h-100 border-none">
+
+                <button class="h-100 alert btn-outline-dark border border-dark align-top" name="answer"
+                        v-bind:value="select.id">
+                  <span class="h5">{{ select.artist }}</span>
+                  <br><br>
+                  <span class="h6">{{ select.track }}</span>
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+          <button ref="over" class="timeOverBtn" name="answer" value="0" style="display: none;"></button>
+
+        </form>
+      </div>
+
+    </div>
+  </script>
+  {% endraw %}
 
 
-      const display_time = {{ game.DISPLAY_TIME }};
-      const limit_time = {{ game.limit_time}};
-      let jump = false;
+  <!-- Vue script -->
+  <script>
+    //template object
+    Vue.component('mycomp', {
+      template: '#mycomp-template',
+      data: function () {
+        return {
+          game_num: {{ game['num'] }},
+          record_log_multi: "{{ url_for('record_log_multi') }}",
+          select_songs: {{ game['select_song'] |tojson }},
+          correct_song: {{ game.correct_song |tojson }},
+          sound_effect_url: "{{ url_for('static', filename='question.mp3') }}",
+          display_time: {{ game.DISPLAY_TIME }},
+          limit_time: {{ game.limit_time}},
+        }
+      },
+      methods: {
+        countDown: function () {
+          let first_redirect = true;
+          const now = Math.floor(Date.now() / 1000);
+          const remained_time = Math.floor(this.limit_time - now, 0);
 
-      (function loop() {
-        const now = Math.floor(Date.now() / 1000);
-        const remained_time = Math.floor(limit_time - now, 0);
+          if (remained_time > -1) {
+            console.log(remained_time);
+            $("#countDown").text(remained_time);
 
+          } else if (remained_time === this.display_time * -1 && first_redirect) {
+            first_redirect = false;
+            //タイムオーバーで自動でクリック
+            $(".timeOverBtn").click();
+          }
 
-        if (remained_time > -1) {
-          console.log(remained_time);
-          $("#countDown").text(remained_time);
+          setTimeout(this.countDown, 1000);
+        },
 
-        } else if (remained_time <= display_time * -1 && !jump) {
-          jump = true;
-          $(".timeOverBtn").click();
+        sleep: function (timer) {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve()
+            }, timer)
+          })
+        },
+
+        songSound: async function () {
+          const audio = new Audio(this.correct_song.preview + "#t=3,30");
+          await this.sleep(2000)
+          audio.play();
+        },
+
+        soundEffect: function () {
+          let audio = new Audio(this.sound_effect_url);
+          audio.play();
         }
 
-        setTimeout(loop, 100);
-      })();
+      },
+      created: function () {
+        this.countDown()
+        this.soundEffect()
+        this.songSound()
+      },
+    });
 
-    }, false);
 
+    //start Vue.
+    new Vue({
+      el: '#app',
+    });
   </script>
 {% endblock %}
