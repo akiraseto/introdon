@@ -53,9 +53,9 @@
       template: '#mycomp-template',
       data: function () {
         return {
-          game_num: {{ game['num'] }},
+          game_num: {{ game.num }},
           record_log_multi: "{{ url_for('record_log_multi') }}",
-          select_songs: {{ game['select_song'] |tojson }},
+          select_songs: {{ game.select_song |tojson }},
           correct_song: {{ game.correct_song |tojson }},
           sound_effect_url: "{{ url_for('static', filename='question.mp3') }}",
           display_time: {{ game.DISPLAY_TIME }},

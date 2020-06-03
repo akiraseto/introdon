@@ -1,89 +1,141 @@
 {% extends "layout.html" %}
 {% block body %}
 
-  <h3>みんなと遊ぶ</h3>
-
-  <div class="container text-center">
-    <h1 class="display-4">第{{ game['num'] }}問 /10</h1>
-
-    <div class="row">
-      <div class="col-md-6 mx-auto">
-
-        <span class="align-items-center justify-content-center">
-          {% if game.judge == 1 %}
-            <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
-          {% else %}
-            <i class="fas fa-times fa-5x fa-fw icon-blue icon-wrong"></i>
-          {% endif %}
-        </span>
-
-        <p>正解は</p>
-        <div class="card">
-          <div class="card-body">
-            <h5>{{ game.correct_song.artist }}</h5>
-            <h5>{{ game.correct_song.track }}</h5>
-            <img alt="jacket_img" class="img-thumbnail" src="{{ game.correct_song.jacket_img }}">
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <div>
-      {% if game['num'] == 10 %}
-        <h2>結果発表まで、あと<span id="countDown"></span>秒</h2>
-      {% else %}
-        <h2>次の問題まで、あと<span id="countDown"></span>秒</h2>
-      {% endif %}
-    </div>
-
+  <!-- Vue container -->
+  <div id="app">
+    <mycomp></mycomp>
   </div>
 
 
-  <script type="text/javascript">
-    $(document).ready(function () {
-      const audio = new Audio("{{game['correct_song'].preview}}#t=7,22");
+  <!-- template -->
+  {% raw %}
+  <script type="text/x-template" id="mycomp-template">
+    <div>
+      <h4 class="mb-3"><span class="badge badge-secondary">みんなと対戦モード</span></h4>
 
-      const judge = {{ game.judge }};
-      if (judge === 1) {
-        const sound_question = new Audio("{{ url_for('static', filename='right.mp3') }}");
-        sound_question.play();
-      } else {
-        const sound_question = new Audio("{{ url_for('static', filename='wrong.mp3') }}");
-        sound_question.play();
-      }
+      <div class="text-center">
+        <h1>第{{ game_num }}問 /10</h1>
+      </div>
 
-      const startMusic = () => {
-        audio.play();
-      };
-      setTimeout(startMusic, 1000);
+      <div class="row justify-content-center text-center">
+        <div class="col-6">
+          <div v-if="game_judge === 1">
+            <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+          </div>
+          <div v-else>
+            <i class="fas fa-times fa-5x fa-fw icon-blue icon-wrong"></i>
+          </div>
+        </div>
+      </div>
 
-      const display_time = {{ game.DISPLAY_TIME }};
-      const limit_time = {{ game.limit_time}};
-      const game_num = {{ game.num}};
-      let jump = false;
+      <div class="row justify-content-center text-center mt-3">
+        <div class="col-12">
+          <span class="small">正解は</span>
+        </div>
 
-      (function loop() {
-        const now = Math.floor(Date.now() / 1000);
-        const remained_time = Math.floor(limit_time - now, 0);
+        <div class="col-4">
+          <div class="card">
+            <div class="card-header">
+              <h5>{{ correct_song.artist }}</h5>
+            </div>
+            <div class="card-body">
+              <h6>{{ correct_song.track }}</h6>
+              <img alt="jacket_img" class="img-thumbnail border-none" v-bind:src="correct_song.jacket_img">
+            </div>
+          </div>
+        </div>
+      </div>
 
-        if (remained_time > -1) {
-          console.log(remained_time);
-          $("#countDown").text(remained_time);
+      <div class="row justify-content-center mt-3">
+        <h2 v-if="game_num === 10" class="">
+          結果発表まで、あと<span id="countDown" class="text-danger"></span>秒
+        </h2>
+        <h2 v-else class="">
+          次の問題まで、あと<span id="countDown" class="text-danger"></span>秒
+        </h2>
+      </div>
 
-        } else if (remained_time <= display_time * -1 && !jump) {
-          jump = true;
+    </div>
+  </script>
+  {% endraw %}
 
-          if (game_num === 10) {
-            location.href = "{{ url_for('result_multi') }}";
+
+  <!-- Vue script -->
+  <script>
+    //template object
+    Vue.component('mycomp', {
+      template: '#mycomp-template',
+      data: function () {
+        return {
+          game_num: {{ game.num }},
+          game_judge: {{ game.judge }},
+          correct_song: {{ game.correct_song |tojson }},
+          sound_right: "{{ url_for('static', filename='right.mp3') }}",
+          sound_wrong: "{{ url_for('static', filename='wrong.mp3') }}",
+          display_time: {{ game.DISPLAY_TIME }},
+          limit_time: {{ game.limit_time}},
+          result_multi: "{{ url_for('result_multi') }}",
+          question_multi: "{{ url_for('question_multi') }}",
+        }
+      },
+      methods: {
+        countDown: function () {
+          let first_redirect = true;
+          const now = Math.floor(Date.now() / 1000);
+          const remained_time = Math.floor(this.limit_time - now, 0);
+
+          if (remained_time > -1) {
+            console.log(remained_time);
+            $("#countDown").text(remained_time);
+
+          } else if (remained_time === this.display_time * -1 && first_redirect) {
+            first_redirect = false;
+
+            if (this.game_num === 10) {
+              location.href = this.result_multi;
+            }
+
+            location.href = this.question_multi;
           }
 
-          location.href = "{{ url_for('question_multi') }}";
-        }
+          setTimeout(this.countDown, 1000);
+        },
 
-        setTimeout(loop, 100);
-      })();
+        sleep: function (timer) {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve()
+            }, timer)
+          })
+        },
 
-    }, false);
+        songSound: async function () {
+          const audio = new Audio(this.correct_song.preview + "#t=7,22");
+          await this.sleep(1000)
+          audio.play();
+        },
+
+        soundEffect: function () {
+          let sound_effect
+          if (this.game_judge === 1) {
+            sound_effect = new Audio(this.sound_right);
+          } else {
+            sound_effect = new Audio(this.sound_wrong);
+          }
+          sound_effect.play();
+        },
+
+      },
+      created: function () {
+        this.countDown()
+        this.soundEffect()
+        this.songSound()
+      },
+    });
+
+    //start Vue.
+    new Vue({
+      el: '#app',
+    });
   </script>
 {% endblock %}
