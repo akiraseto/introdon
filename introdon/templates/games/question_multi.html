@@ -15,7 +15,7 @@
 
       <div class="text-center">
         <h1>第{{ game_num }}問 /10</h1>
-        <h2>あと<span id="countDown" class="text-danger"></span>秒</h2>
+        <h2>あと<span class="text-danger">{{ remained_time | displayZero }}</span>秒</h2>
       </div>
 
       <div>
@@ -60,19 +60,16 @@
           sound_effect_url: "{{ url_for('static', filename='question.mp3') }}",
           display_time: {{ game.DISPLAY_TIME }},
           limit_time: {{ game.limit_time}},
+          remained_time: this.limit_time
         }
       },
       methods: {
         countDown: function () {
           let first_redirect = true;
           const now = Math.floor(Date.now() / 1000);
-          const remained_time = Math.floor(this.limit_time - now, 0);
+          this.remained_time = Math.floor(this.limit_time - now, 0);
 
-          if (remained_time > -1) {
-            console.log(remained_time);
-            $("#countDown").text(remained_time);
-
-          } else if (remained_time === this.display_time * -1 && first_redirect) {
+          if (this.remained_time <= this.display_time * -1 && first_redirect) {
             first_redirect = false;
             //タイムオーバーで自動でクリック
             $(".timeOverBtn").click();
@@ -101,6 +98,16 @@
         }
 
       },
+      filters: {
+        displayZero: function (num) {
+          if (num < 0) {
+            return 0
+          } else {
+            return num
+          }
+        }
+      },
+
       created: function () {
         this.countDown()
         this.soundEffect()

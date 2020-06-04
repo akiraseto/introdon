@@ -48,10 +48,10 @@
 
       <div class="row justify-content-center mt-3">
         <h2 v-if="game_num === 10" class="">
-          結果発表まで、あと<span id="countDown" class="text-danger"></span>秒
+          結果発表まで、あと<span class="text-danger">{{ remained_time | displayZero }}</span>秒
         </h2>
         <h2 v-else class="">
-          次の問題まで、あと<span id="countDown" class="text-danger"></span>秒
+          次の問題まで、あと<span class="text-danger">{{ remained_time | displayZero }}</span>秒
         </h2>
       </div>
 
@@ -76,19 +76,16 @@
           limit_time: {{ game.limit_time}},
           result_multi: "{{ url_for('result_multi') }}",
           question_multi: "{{ url_for('question_multi') }}",
+          remained_time: this.limit_time
         }
       },
       methods: {
         countDown: function () {
           let first_redirect = true;
           const now = Math.floor(Date.now() / 1000);
-          const remained_time = Math.floor(this.limit_time - now, 0);
+          this.remained_time = Math.floor(this.limit_time - now, 0);
 
-          if (remained_time > -1) {
-            console.log(remained_time);
-            $("#countDown").text(remained_time);
-
-          } else if (remained_time === this.display_time * -1 && first_redirect) {
+          if (this.remained_time <= this.display_time * -1 && first_redirect) {
             first_redirect = false;
 
             if (this.game_num === 10) {
@@ -126,6 +123,16 @@
         },
 
       },
+      filters: {
+        displayZero: function (num) {
+          if (num < 0) {
+            return 0
+          } else {
+            return num
+          }
+        }
+      },
+
       created: function () {
         this.countDown()
         this.soundEffect()
