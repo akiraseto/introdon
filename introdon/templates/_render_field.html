@@ -1,5 +1,5 @@
 {% macro render_field(field) %}
-  <div class="form-group col-4">
+  <div class="form-group col-sm-4">
     <label for="{{ field.name }}">{{ field.label.text }}</label>
     {{ field(**kwargs)|safe }}
     <ul class="list-group list-group-flush text-left small">

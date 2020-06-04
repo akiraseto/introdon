@@ -1,18 +1,27 @@
 <!DOCTYPE html>
-<title>Intro Don</title>
+<html lang="ja">
 
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-<link href="https://fonts.googleapis.com/earlyaccess/mplus1p.css" rel="stylesheet" type="text/css">
-<link href="https://use.fontawesome.com/releases/v5.12.0/css/all.css" rel="stylesheet">
+<head>
+  <title>Intro Don</title>
+  <meta charset="UTF-8">
 
-{#todo:最後は本番用に差し替える#}
-<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.js"></script>
+  <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <link href="https://fonts.googleapis.com/earlyaccess/mplus1p.css" rel="stylesheet" type="text/css">
+  <link href="https://use.fontawesome.com/releases/v5.12.0/css/all.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.js"></script>
 
-<link href="{{ url_for('static', filename='style.css') }}" rel=stylesheet>
+  {#dev mode#}
+  {#<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>#}
+  {#production mode#}
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+
+  <link href="{{ url_for('static', filename='style.css') }}" rel=stylesheet>
+
+</head>
+<body>
 
 <div class="container">
   <div class="row">
@@ -70,3 +79,6 @@
     window.setTimeout("$('#alert-fadeout').fadeOut()", 3000);
   });
 </script>
+
+</body>
+</html>

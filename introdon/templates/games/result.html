@@ -18,7 +18,7 @@
         <h2>正解数 {{ count_judge }} /10問</h2>
 
         <div class="row">
-          <div v-for="(song, index) in correct_song_list" class="col-3 my-1">
+          <div v-for="(song, index) in correct_song_list" class="col-sm-3 my-1">
 
             <div class="card h-100 btn-outline-secondary" v-on:click="songSound(song.preview)">
               <div class="card-header">
@@ -43,10 +43,11 @@
         </div>
 
         <div class="row justify-content-center m-3">
-          <button class="btn btn-primary col-3 m-2" v-bind:onclick="'location.href=\'' + setting_url + '\''">
+          <button class="btn btn-primary col-sm-3 m-2" v-bind:onclick="'location.href=\'' + setting_url + '\''">
             もう一度遊ぶ
           </button>
-          <button class="btn btn-primary col-3 m-2" v-bind:onclick="'location.href=\'' + index_url + '\''">やめる</button>
+          <button class="btn btn-primary col-sm-3 m-2" v-bind:onclick="'location.href=\'' + index_url + '\''">やめる
+          </button>
         </div>
 
       </div>
