@@ -1,14 +1,10 @@
-.card {
-  margin: 0.25rem;
-}
+/*.card {*/
+/*  margin: 0.25rem;*/
+/*}*/
 
-.introdon-body {
-  padding: 1.25em;
-}
-
-* {
-  font-family: 'Helvetica Neue', monospace;
-}
+/** {*/
+/*  font-family: 'Helvetica Neue', monospace;*/
+/*}*/
 
 .icon-correct {
   color: Tomato;

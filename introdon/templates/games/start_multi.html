@@ -2,7 +2,7 @@
 {% block body %}
 
   <!-- Vue container -->
-  <div id="app" class="m-5">
+  <div id="app">
     <mycomp></mycomp>
   </div>
 
@@ -11,11 +11,12 @@
   <script type="text/x-template" id="mycomp-template">
     <div>
 
-      <h1>ただ今、メンバー受付中・・</h1>
-      <h2>ゲームID: {{ GAME_ID }}</h2>
-      <h3 id="text_limit">締め切りまであと<span id="countDown"></span>秒</h3>
+      <h4 class="mb-3"><span class="badge badge-secondary">みんなと対戦モード</span></h4>
+      <h1>メンバー受付中・・</h1>
+      <h2 id="text_limit">開始まであと<span class="text-danger">{{ remained_time | displayZero }}</span>秒</h2>
+      <h3>ゲームID: {{ game_id }}</h3>
 
-      <table class="table">
+      <table class="table my-3">
         <thead class="thead-light">
         <tr>
           <th colspan="3" class="text-center">参加メンバー</th>
@@ -33,6 +34,18 @@
         </tr>
       </table>
 
+      <div class="mt-2 alert alert-dismissable bg-dark">
+        <h5 class="text-light">ゲーム説明</h5>
+        <ul class="list-group">
+          <li class="list-group-item">最大5人参加の早押し曲当てクイズ</li>
+          <li class="list-group-item">全部で10問</li>
+          <li class="list-group-item">スコアを多く取とったユーザーが勝利</li>
+          <li class="list-group-item">獲得スコア順にランキングされる</li>
+          <li class="list-group-item">早く正解するほど高スコアをもらえる</li>
+          <li class="list-group-item">1番:50点 2番:40点 3番:30点 4番:20点 5番:10点</li>
+        </ul>
+      </div>
+
     </div>
   </script>
   {% endraw %}
@@ -45,28 +58,26 @@
       data: function () {
         return {
           memberData: null,
-          MAX_MEMBER: {{ game.MAX_MEMBER}},
-          DelayTime: 3,
-          WAITING_TIME: {{ game.START_WAITING_TIME}},
-          TIMER_SOUND_URL: "{{ url_for('static', filename='timer.m4a') }}",
-          GAME_ID: {{ game.game_id }},
-          DISPLAY_TIME: {{ game.DISPLAY_TIME }},
-          LIMIT_TIME: {{ game.limit_time}},
+          max_member: {{ game.MAX_MEMBER}},
+          delay_time: 3,
+          waiting_time: {{ game.START_WAITING_TIME}},
+          timer_sound_url: "{{ url_for('static', filename='timer.m4a') }}",
+          question_multi: "{{ url_for('question_multi') }}",
+          game_id: {{ game.game_id }},
+          display_time: {{ game.DISPLAY_TIME }},
+          limit_time: {{ game.limit_time}},
+          remained_time: this.limit_time
         }
       },
       methods: {
         countDown: function () {
           let first_redirect = true;
           const now = Math.floor(Date.now() / 1000);
-          const remained_time = Math.floor(this.LIMIT_TIME - now, 0);
+          this.remained_time = Math.floor(this.limit_time - now, 0);
 
-          if (remained_time > -1) {
-            console.log(remained_time);
-            $("#countDown").text(remained_time);
-
-          } else if (remained_time === this.DISPLAY_TIME * -1 && first_redirect) {
+          if (this.remained_time <= this.display_time * -1 && first_redirect) {
             first_redirect = false;
-            location.href = "{{ url_for('question_multi') }}";
+            location.href = this.question_multi;
           }
 
           setTimeout(this.countDown, 1000);
@@ -84,34 +95,40 @@
           for (let i = 0; i < this.numOfTime; i++) {
             await axios.get('/game/participating_members', {
               params: {
-                game_id: this.GAME_ID
+                game_id: this.game_id
               }
             })
                 .then(res => {
                   this.memberData = res.data
-                  console.log(res.data)
                 })
 
-            if (this.memberData.length === this.MAX_MEMBER) {
+            if (this.memberData.length === this.max_member) {
               console.log('満員!')
               return Promise.resolve(1);
             }
-            await this.sleep(this.DelayTime * 1000)
+            await this.sleep(this.delay_time * 1000)
           }
         },
 
         timerSound: function () {
-          let audio = new Audio(this.TIMER_SOUND_URL);
+          let audio = new Audio(this.timer_sound_url);
           audio.loop = true;
           audio.play();
         }
-
       },
       computed: {
         numOfTime: function () {
-          return this.WAITING_TIME / this.DelayTime
+          return this.waiting_time / this.delay_time
         }
-
+      },
+      filters: {
+        displayZero: function (num) {
+          if (num < 0) {
+            return 0
+          } else {
+            return num
+          }
+        }
       },
       created: function () {
         this.countDown()

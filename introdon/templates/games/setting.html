@@ -2,20 +2,42 @@
 {% extends "layout.html" %}
 {% block body %}
 
-  1人でじっくりモード
+  <h4 class="mb-3"><span class="badge badge-secondary">ひとりでじっくりモード</span></h4>
+  <h1>問題を作ろう</h1>
 
-  <h1>ゲームをはじめよう</h1>
-  <p>曲を絞り込む</p>
+  <div class="mt-2">
+    <p>そのままスタートを押せば、完全ランダム曲で問題がスタート!<br>
+      項目を入力してスタートすれば、問題曲を限定できるよ♪</p>
+  </div>
 
-  <form action="{{ url_for('setting_game') }}" method="POST">
-    {{ render_set(form.artist ) }}
-    {{ render_set(form.genre ) }}
+  <form action="{{ url_for('setting_game') }}" method="POST" class="mt-3">
 
-    <p>リリース期間</p>
-    {{ render_set(form.release_from ) }}
-    {{ render_set(form.release_end ) }}
+    <div class="form-row">
+      <div class="form-group col-sm-10">
+        {{ render_set(form.artist, class='form-control') }}
+      </div>
+      <div class="form-group col-sm-10">
+        {{ render_set(form.genre, class='form-control') }}
+      </div>
+    </div>
 
-    <button class="btn btn-primary" type="submit">スタート</button>
+    <div class="form-row pl-1 my-1">
+      リリース時期
+    </div>
+
+    <div class="form-row">
+      <div class="form-group col-sm-5">
+        {{ render_set(form.release_from, class='form-control') }}
+      </div>
+      <div class="form-group col-sm-5">
+        {{ render_set(form.release_end, class='form-control') }}
+      </div>
+    </div>
+
+    <div class="form-row">
+      <button class="btn btn-primary form-control col-sm-10" type="submit">スタート</button>
+    </div>
+
   </form>
 
 {% endblock %}

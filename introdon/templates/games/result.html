@@ -1,61 +1,103 @@
 {% extends "layout.html" %}
 {% block body %}
 
-<div class="container text-center">
-
-  <p>結果発表</p>
-  <h1 class="display-4">正解数 {{game.count_judge}} /10問</h1>
-
-  <div class="row">
-    {% for song in game.correct_song_list %}
-    <div class="col-md-3 pb-2">
-      <div class="card h-100">
-        <button class="h-100 border-none" onclick=sound("{{song.preview}}")>
-          <p>第{{loop.index}}問</p>
-          <span class="align-items-center justify-content-center">
-          {% if game.judge[loop.index -1] == 1 %}
-            <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
-          {% else %}
-            <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
-          {% endif %}
-        </span>
-
-          <div class="card-body">
-            <p>{{ song.artist }}</p>
-            <p>{{ song.track }}</p>
-            <img alt="jacket_img" class="rounded float-center" src="{{ song.jacket_img }}">
-          </div>
-        </button>
-      </div>
-    </div>
-    {% endfor %}
+  <!-- Vue container -->
+  <div id="app">
+    <mycomp></mycomp>
   </div>
 
-  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_game') }}'">
-    もう一度遊ぶ
-  </button>
-  <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'">やめる</button>
-</div>
+  <!-- template -->
+  {% raw %}
+  <script type="text/x-template" id="mycomp-template">
+    <div>
 
+      <h4 class="mb-3"><span class="badge badge-secondary">ひとりでじっくりモード</span></h4>
 
-  <script type="text/javascript">
-    const sound_question = new Audio("{{ url_for('static', filename='cheer.mp3') }}");
-    sound_question.volume = 0.3
-    sound_question.play();
+      <div class="text-center">
+        <h1>結果発表</h1>
+        <h2>正解数 {{ count_judge }} /10問</h2>
 
-    let audios = [];
+        <div class="row">
+          <div v-for="(song, index) in correct_song_list" class="col-sm-3 my-1">
 
-    function sound(track) {
-      for (let i = 0; i < audios.length; i++) {
-        audios[i].pause();
-      }
+            <div class="card h-100 btn-outline-secondary" v-on:click="songSound(song.preview)">
+              <div class="card-header">
+                <h4>第{{ index + 1 }}問</h4>
+                <div v-if="judge_list[index] === 1">
+                  <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+                </div>
+                <div v-else>
+                  <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
+                </div>
+              </div>
 
-      const audio = new Audio(track + "#t=3,30");
-      audio.play();
-      audios = [];
-      audios.push(audio);
-    }
+              <div class="card-body">
+                <h5>{{ song.artist }}</h5>
+                <br>
+                <h6>{{ song.track }}</h6>
+                <img alt="jacket_img" class="rounded float-center" v-bind:src="song.jacket_img">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="row justify-content-center m-3">
+          <button class="btn btn-primary col-sm-3 m-2" v-bind:onclick="'location.href=\'' + setting_url + '\''">
+            もう一度遊ぶ
+          </button>
+          <button class="btn btn-primary col-sm-3 m-2" v-bind:onclick="'location.href=\'' + index_url + '\''">やめる
+          </button>
+        </div>
+
+      </div>
+    </div>
   </script>
+  {% endraw %}
 
 
+  <!-- Vue script -->
+  <script>
+    //template object
+    Vue.component('mycomp', {
+      template: '#mycomp-template',
+      data: function () {
+        return {
+          count_judge: {{ game.count_judge }},
+          judge_list: {{ game.judge }},
+          correct_song_list: {{ game.correct_song_list |tojson}},
+          sound_cheer: "{{ url_for('static', filename='cheer.mp3') }}",
+          setting_url: "{{ url_for('setting_game') }}",
+          index_url: "{{ url_for('index') }}",
+          audios: []
+        }
+      },
+      methods: {
+        songSound: function (track) {
+          for (let i = 0; i < this.audios.length; i++) {
+            this.audios[i].pause();
+          }
+
+          const audio = new Audio(track + "#t=3,30");
+          audio.play();
+          this.audios.push(audio)
+        },
+
+        soundEffect: function () {
+          const sound_effect = new Audio(this.sound_cheer);
+          sound_effect.volume = 0.3
+          sound_effect.play();
+        }
+
+      },
+      created: function () {
+        this.soundEffect()
+      },
+    });
+
+    //start Vue.
+    new Vue({
+      el: '#app',
+    });
+  </script>
 {% endblock %}

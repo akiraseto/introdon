@@ -1,105 +1,148 @@
 {% extends "layout.html" %}
 {% block body %}
 
-  <div class="container text-center">
-    <div class="mb-5">
-      <h1 class="display-4">順位発表</h1>
-      <table class="table">
-        <thead>
-        <td>rank</td>
-        <td>user</td>
-        <td>score</td>
-        </thead>
-        {% for rank in game.display_rank %}
-          <tr>
-
-            {% if loop.index == 1 %}
-              <td>GOLD</td>
-            {% elif loop.index == 2 %}
-              <td>SILVER</td>
-            {% elif loop.index == 3 %}
-              <td>BRONZE</td>
-            {% else %}
-              <td>{{ loop.index }}位</td>
-            {% endif %}
-
-            {% if rank[0] == current_user.username %}
-              <td><span class="text-primary font-weight-bold">{{ current_user.username }}さん</span></td>
-            {% else %}
-              <td>{{ rank[0] }}さん</td>
-            {% endif %}
-
-            <td>{{ rank[1] }}point</td>
-          </tr>
-        {% endfor %}
-      </table>
-    </div>
-
-    <h1 class="display-5">{{ current_user.username }}さんの正解数 {{ game.count_judge }} /10問</h1>
-
-    <div class="row">
-      {% for song in game.correct_song_list %}
-        <div class="col-md-3 pb-2">
-          <div class="card h-100">
-            <button class="h-100 border-none" onclick=sound("{{ song.preview }}")>
-              <p>第{{ loop.index }}問</p>
-              <span class="align-items-center justify-content-center">
-          {% if game.judge[loop.index -1] == 1 %}
-            <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
-          {% else %}
-            <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
-          {% endif %}
-        </span>
-
-              <div class="card-body">
-                <p>{{ song.artist }}</p>
-                <p>{{ song.track }}</p>
-                <img alt="jacket_img" class="rounded float-center" src="{{ song.jacket_img }}">
-              </div>
-            </button>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-
-    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('setting_multi') }}'">
-      もう一度遊ぶ
-    </button>
-    <button class="btn btn-primary m-3 inline" onclick="location.href='{{ url_for('index') }}'">やめる
-    </button>
+  <!-- Vue container -->
+  <div id="app">
+    <mycomp></mycomp>
   </div>
 
 
-  <script type="text/javascript">
-    let rank = {{ game.display_rank |tojson }};
-    const username = String({{ current_user.username |string }});
-    const worst = rank.pop()
-    let sound_question = null
+  <!-- template -->
+  {% raw %}
+  <script type="text/x-template" id="mycomp-template">
+    <div>
 
-    if (username === rank[0][0]) {
-      sound_question = new Audio("{{ url_for('static', filename='big-cheer.mp3') }}");
-    } else if (username === worst[0]) {
-      sound_question = new Audio("{{ url_for('static', filename='stupid.mp3') }}");
-    } else {
-      sound_question = new Audio("{{ url_for('static', filename='cheer.mp3') }}");
-    }
+      <h4 class="mb-3"><span class="badge badge-secondary">みんなと対戦モード</span></h4>
 
-    sound_question.volume = 0.3
-    sound_question.play();
+      <div class="text-center">
+        <h1>結果発表</h1>
 
-    let audios = [];
+        <div class="row justify-content-center my-3">
 
-    function sound(track) {
-      for (let i = 0; i < audios.length; i++) {
-        audios[i].pause();
-      }
+          <h2 class="col-12">ランキング</h2>
+          <table class="table text-left bg-light">
+            <thead class="thead-dark">
+            <tr>
+              <th>RANK</th>
+              <th>USER</th>
+              <th>SCORE</th>
+            </tr>
+            </thead>
+            <tr v-for="(rank, index) in display_rank">
 
-      const audio = new Audio(track + "#t=2,30");
-      audio.play();
-      audios = [];
-      audios.push(audio);
-    }
+              <th v-if="index == 0"><i class="fas fa-crown fa-2x"></i> GOLD</th>
+              <th v-else-if="index  == 1"><i class="fas fa-trophy fa-lg"></i> SILVER</th>
+              <th v-else-if="index == 2"><i class="fas fa-award fa-lg"></i> BRONZE</th>
+              <th v-else>{{ index + 1 }}位</th>
+
+              <td v-if="rank[0] == user_name">
+                <span class="text-primary font-weight-bold">{{ user_name }}さん</span>
+              </td>
+              <td v-else>{{ rank[0] }}さん</td>
+
+              <td>{{ rank[1] }}point</td>
+            </tr>
+          </table>
+        </div>
+
+        <h2>{{ user_name }}さんの正解数 {{ count_judge }} /10問</h2>
+
+        <div class="row">
+          <div v-for="(song, index) in correct_song_list" class="col-sm-3 my-1">
+
+            <div class="card h-100 btn-outline-secondary" v-on:click="songSound(song.preview)">
+              <div class="card-header">
+                <h4>第{{ index + 1 }}問</h4>
+                <div v-if="judge_list[index] === 1">
+                  <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+                </div>
+                <div v-else>
+                  <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <h5>{{ song.artist }}</h5>
+                <br>
+                <h6>{{ song.track }}</h6>
+                <img alt="jacket_img" class="rounded float-center" v-bind:src="song.jacket_img">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="row justify-content-center m-3">
+          <button class="btn btn-primary col-sm-3 m-2" v-bind:onclick="'location.href=\'' + setting_multi + '\''">
+            もう一度遊ぶ
+          </button>
+          <button class="btn btn-primary col-sm-3 m-2" v-bind:onclick="'location.href=\'' + index_url + '\''">やめる
+          </button>
+        </div>
+
+      </div>
+    </div>
   </script>
+  {% endraw %}
 
 
+  <!-- Vue script -->
+  <script>
+    //template object
+    Vue.component('mycomp', {
+      template: '#mycomp-template',
+      data: function () {
+        return {
+          display_rank: {{ game.display_rank |tojson }},
+          user_name: {{ current_user.username |string }},
+          count_judge: {{ game.count_judge }},
+          correct_song_list: {{ game.correct_song_list |tojson}},
+          judge_list: {{ game.judge }},
+          setting_multi: "{{ url_for('setting_multi') }}",
+          index_url: "{{ url_for('index') }}",
+          sound_big_cheer: "{{ url_for('static', filename='big-cheer.mp3') }}",
+          sound_stupid: "{{ url_for('static', filename='stupid.mp3') }}",
+          sound_cheer: "{{ url_for('static', filename='cheer.mp3') }}",
+          audios: []
+        }
+      },
+      methods: {
+        songSound: function (track) {
+          for (let i = 0; i < this.audios.length; i++) {
+            this.audios[i].pause();
+          }
+
+          const audio = new Audio(track + "#t=2,30");
+          audio.play();
+          this.audios.push(audio)
+        },
+
+        soundEffect: function () {
+          let _display_rank = this.display_rank.slice();
+          const worst = _display_rank.pop()
+          let se
+          if (this.user_name == this.display_rank[0][0]) {
+            se = this.sound_big_cheer
+          } else if (this.user_name == worst[0]) {
+            se = this.sound_stupid
+          } else {
+            se = this.sound_cheer
+          }
+
+          const sound_effect = new Audio(se);
+          sound_effect.volume = 0.3
+          sound_effect.play();
+        }
+
+      },
+      created: function () {
+        this.soundEffect()
+      },
+    });
+
+    //start Vue.
+    new Vue({
+      el: '#app',
+    });
+  </script>
 {% endblock %}

@@ -1,44 +1,91 @@
 {% extends "layout.html" %}
 {% block body %}
 
-  <div class="container text-center">
-    <h1 class="display-4">第{{ game['num'] }}問 /10</h1>
-
-    <form action="{{ url_for('record_log') }}" class="" method=post>
-      <div class="row px-5">
-
-        {% for select in game['select_song'] %}
-          <div class="col-md-3 mx-auto">
-            <div class="card h-100">
-              <button class="h-100 border-none" name="answer" value="{{ select.id }}">
-                <div class="card-body">
-                  <h5>{{ select.artist }}</h5>
-                  <h5>{{ select.track }}</h5>
-                </div>
-          </button>
-        </div>
-          </div>
-        {% endfor %}
-
-      </div>
-    </form>
-
+  <!-- Vue container -->
+  <div id="app">
+    <mycomp></mycomp>
   </div>
 
-  <script type="text/javascript">
-    $(document).ready(function () {
-      const audio = new Audio("{{game['correct_song'].preview}}#t=3,30");
-      const sound_question = new Audio("{{ url_for('static', filename='question.mp3') }}");
-      sound_question.play();
+  <!-- template -->
+  {% raw %}
+  <script type="text/x-template" id="mycomp-template">
+    <div>
+      <h4 class="mb-3"><span class="badge badge-secondary">ひとりでじっくりモード</span></h4>
 
-      const startMusic = () => {
-        audio.play();
-      };
+      <div class="text-center">
+        <h1>第{{ game_num }}問 /10</h1>
+      </div>
 
-      setTimeout(startMusic, 2000);
+      <div>
+        <form v-bind:action="record_log_url" class="" method=post>
+          <div class="row">
 
-    }, false);
+            <div v-for="select in select_songs" class="col-sm-3">
+              <div class="card h-100 border-none">
 
+                <button class="h-100 alert btn-outline-dark border border-dark align-top" name="answer"
+                        v-bind:value="select.id">
+                  <span class="h5">{{ select.artist }}</span>
+                  <br><br>
+                  <span class="h6">{{ select.track }}</span>
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+    </div>
   </script>
+  {% endraw %}
 
+
+  <!-- Vue script -->
+  <script>
+    //template object
+    Vue.component('mycomp', {
+      template: '#mycomp-template',
+      data: function () {
+        return {
+          game_num: {{ game['num'] }},
+          record_log_url: "{{ url_for('record_log') }}",
+          select_songs: {{ game['select_song'] |tojson }},
+          correct_song: {{ game.correct_song |tojson }},
+          sound_effect_url: "{{ url_for('static', filename='question.mp3') }}",
+        }
+      },
+      methods: {
+        sleep: function (timer) {
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve()
+            }, timer)
+          })
+        },
+
+        songSound: async function () {
+          const audio = new Audio(this.correct_song.preview + "#t=3,30");
+          await this.sleep(2000)
+          audio.play();
+        },
+
+        soundEffect: function () {
+          let audio = new Audio(this.sound_effect_url);
+          audio.play();
+        }
+
+      },
+      created: function () {
+        this.soundEffect()
+        this.songSound()
+      },
+    });
+
+    //start Vue.
+    new Vue({
+      el: '#app',
+    });
+  </script>
 {% endblock %}
