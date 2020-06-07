@@ -92,7 +92,6 @@ class User(UserMixin, db.Model):
                 validate = True
             except:
                 db.session.rollback()
-                raise
 
         return validate
 

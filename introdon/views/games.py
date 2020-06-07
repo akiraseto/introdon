@@ -5,7 +5,7 @@ from flask import redirect, url_for, render_template, session, request, flash, j
 from flask_login import current_user, login_required
 
 from introdon import app
-from introdon.models.games import Game, GameLogic
+from introdon.models.games import Game
 from introdon.models.logs import Log
 from introdon.models.songs import Song
 from introdon.models.users import User
@@ -28,15 +28,14 @@ def setting_multi():
     # game_idで受付中のものがある場合(createから数秒以内で、参加人数に空きあり)
     if latest_game != None and timedelta(
             seconds=START_WAITING_TIME) > datetime.now() - latest_game.created_at and not entry_list[-1]:
-        game_logic = GameLogic()
 
         # 自分idのエントリーが無かったら、
         if user_id not in entry_list:
             # gameにユーザーを追加
-            game_logic.participate_in_game(latest_game, user_id)
+            Game.participate_in_game(latest_game, user_id)
 
         # game_idからcorrect_id、select_idを取得
-        correct_id, select_id = game_logic.fetch_songs_id(latest_game)
+        correct_id, select_id = Game.fetch_songs_id(latest_game)
 
         session['id'] = latest_game.id
         session['correct'] = correct_id
@@ -105,8 +104,7 @@ def start_multi():
             return render_template('games/setting_multi.html', form=form)
 
         else:
-            game_logic = GameLogic()
-            game_id, game_created_at = game_logic.create_game(correct_id, select_id, user_id)
+            game_id, game_created_at = Game.create_game(correct_id, select_id, user_id)
 
             session['id'] = game_id
             session['correct'] = correct_id
@@ -210,8 +208,7 @@ def result_multi():
     correct_song_list = Song.dump_correct_songs_list(correct_songs)
 
     # 参加したuserのidを取得
-    game_logic = GameLogic()
-    users_id_list = game_logic.fetch_users_id(game_instance)
+    users_id_list = Game.fetch_users_id(game_instance)
 
     # ユーザーごとの得点を集計
     order_score = Log.calc_score(game_id, users_id_list)
@@ -220,7 +217,7 @@ def result_multi():
     display_rank = User.bind_name_score(users_id_list, order_score)
 
     # Gameのゴールド、シルバー、ブロンズ内容をupdate
-    game_logic.update_game(order_score, game_instance)
+    Game.update_game(order_score, game_instance)
 
     game = {
         'judge': session['judge'],
@@ -258,8 +255,7 @@ def setting_game():
                                                                                    release_end)
 
         if validate_make_q:
-            game_logic = GameLogic()
-            game_id, game_created_at = game_logic.create_game(correct_id, select_id, user_id)
+            game_id, game_created_at = Game.create_game(correct_id, select_id, user_id)
 
             session['num'] = 1
             session['answer'] = []
@@ -350,10 +346,9 @@ def result():
 def participating_members():
     # start_multi.htmlでユーザーの参加状態監視に使用
     game_id = int(request.args.get('game_id'))
-    game_logic = GameLogic()
 
     game_instance = Game.query.filter(Game.id == game_id).first()
-    users_id_list = game_logic.fetch_users_id(game_instance)
+    users_id_list = Game.fetch_users_id(game_instance)
 
     users_record_list = User.fetch_user_records(users_id_list)
 

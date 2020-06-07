@@ -193,7 +193,6 @@ class Song(db.Model):
                 validate = True
             except:
                 db.session.rollback()
-                raise
 
         return validate, status_code
 

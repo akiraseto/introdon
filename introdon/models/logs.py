@@ -15,6 +15,7 @@ class Log(db.Model):
     select_song_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
+
     def __init__(self, game_id, question_num, judge, correct_song_id, select_song_id, user_id=None, score=0):
         self.user_id = user_id
         self.game_id = game_id
@@ -83,7 +84,6 @@ class Log(db.Model):
             db.session.commit()
         except:
             db.session.rollback()
-            raise
         finally:
             db.session.close()
 
@@ -94,6 +94,8 @@ class Log(db.Model):
         """ユーザーごとに得点を集計
 
         集計した得点をuser_idとタプルにしてユーザーごとのリストにして返す
+
+        ----------
         :param game_id: ゲームID
         :param users_id_list: ユーザーのIDリスト
         """
