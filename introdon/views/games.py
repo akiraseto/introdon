@@ -6,7 +6,7 @@ from flask_login import current_user, login_required
 
 from introdon import app
 from introdon.models.games import Game, GameLogic
-from introdon.models.logs import LogLogic
+from introdon.models.logs import Log
 from introdon.models.songs import Song
 from introdon.models.users import User
 from introdon.views.config_introdon import *
@@ -173,8 +173,7 @@ def record_log_multi():
     if current_user.is_authenticated:
         user_id = current_user.id
 
-    log_logic = LogLogic()
-    judge, score = log_logic.create_log(user_id, game_id, num, correct, answer, is_multi=True)
+    judge, score = Log.create_log(user_id, game_id, num, correct, answer, is_multi=True)
 
     # UserDBにスコアをupdate
     User.add_record_to_user(judge, user_id, num, score)
@@ -215,8 +214,7 @@ def result_multi():
     users_id_list = game_logic.fetch_users_id(game_instance)
 
     # ユーザーごとの得点を集計
-    log_logic = LogLogic()
-    order_score = log_logic.calc_score(game_id, users_id_list)
+    order_score = Log.calc_score(game_id, users_id_list)
 
     # 発表用にユーザー名と得点を対応させる
     display_rank = User.bind_name_score(users_id_list, order_score)
@@ -311,8 +309,7 @@ def record_log():
     if current_user.is_authenticated:
         user_id = current_user.id
 
-    log_logic = LogLogic()
-    judge, score = log_logic.create_log(user_id, game_id, num, correct, answer)
+    judge, score = Log.create_log(user_id, game_id, num, correct, answer)
 
     # UserDBにスコアをupdate
     User.add_record_to_user(judge, user_id, num, score)
