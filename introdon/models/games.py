@@ -196,18 +196,19 @@ class Game(db.Model):
     def __repr__(self):
         return '<Entry id:{}>'.format(self.id)
 
-
-class GameLogic:
-    """Game.viewで利用するロジックのまとめ
-
-    Game.viewからのロジックをGame.modelのデータを元に加工して返す
-    """
-
-    def create_game(self, correct_id: int, select_id: int, user_id: int) -> tuple:
+    @classmethod
+    def create_game(cls, correct_id: list, select_id: list, user_id: int) -> tuple:
         """新規にGameを作成する
 
         1人目ユーザーの登録とともに、新規にGame作成し、game_id,作成日を返す
+
+        ----------
+        :param correct_id:  正解曲のIDリスト
+        :param select_id: 選択曲のIDリスト
+        :param user_id: ユーザーID
+        :rtype: tuple(game_id:int, game_created_at:datetime)
         """
+
         records = {}
         for i in range(MAX_QUESTION):
             records["question" + str(i + 1) + "_correct_song_id"] = correct_id[i]
@@ -223,15 +224,19 @@ class GameLogic:
             db.session.commit()
         except:
             db.session.rollback()
-            raise
 
         return this_game.id, this_game.created_at
 
-    def fetch_users_id(self, game_instance: object) -> list:
+    @classmethod
+    def fetch_users_id(cls, game_instance: object) -> list:
         """ゲーム参加したuserのidを取得
 
         user_idをlistにして返す
+
+        ----------
+        :param game_instance: ゲームインスタンス
         """
+
         users_id_list = []
         for i in range(1, MAX_MEMBER + 1):
             attr_name = "entry_user" + str(i)
@@ -241,11 +246,17 @@ class GameLogic:
 
         return users_id_list
 
-    def update_game(self, order_score, game_instance) -> None:
+    @classmethod
+    def update_game(cls, order_score: list, game_instance: object) -> None:
         """Game内容を更新
 
         順位を追加して、GameのDBをupdate
+
+        ----------
+        :param order_score: ユーザーIDと得点のタプルが入ったリスト
+        :param game_instance: ゲームインスタンス
         """
+
         grade_name = ['gold_user', 'silver_user', 'bronze_user']
         grade_score = ['gold_score', 'silver_score', 'bronze_score']
 
@@ -259,13 +270,18 @@ class GameLogic:
             db.session.commit()
         except:
             db.session.rollback()
-            raise
 
-    def participate_in_game(self, latest_game, user_id: int) -> None:
+    @classmethod
+    def participate_in_game(cls, latest_game: object, user_id: int) -> None:
         """Gameにユーザーを参加登録する
 
         該当のGameインスタンスにユーザーを参加追加させる
+
+        ----------
+        :param latest_game: ゲームインスタンス
+        :param user_id: ユーザーID
         """
+
         for i in range(1, MAX_MEMBER + 1):
             if not getattr(latest_game, 'entry_user' + str(i)):
                 setattr(latest_game, 'entry_user' + str(i), user_id)
@@ -277,13 +293,17 @@ class GameLogic:
             db.session.commit()
         except:
             db.session.rollback()
-            raise
 
-    def fetch_songs_id(self, latest_game: object) -> tuple:
-        """正解曲と選択肢曲のsong_idのリストを取得
+    @classmethod
+    def fetch_songs_id(cls, latest_game: object) -> tuple:
+        """正解曲と選択曲のsong_idのリストを取得
 
-        Gameで使った正解/選択肢曲のidをそれぞれリストにしてタプルで返す
+        Gameで使った正解/選択曲のidをそれぞれリストにしてタプルで返す
+
+        ----------
+        :param latest_game: ゲームインスタンス
         """
+
         correct_id = []
         select_id = [[0 for i in range(MAX_SELECT)] for j in range(MAX_QUESTION)]
 

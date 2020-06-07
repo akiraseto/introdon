@@ -5,10 +5,10 @@ from flask import redirect, url_for, render_template, session, request, flash, j
 from flask_login import current_user, login_required
 
 from introdon import app
-from introdon.models.games import Game, GameLogic
-from introdon.models.logs import LogLogic
-from introdon.models.songs import SongLogic
-from introdon.models.users import UserLogic
+from introdon.models.games import Game
+from introdon.models.logs import Log
+from introdon.models.songs import Song
+from introdon.models.users import User
 from introdon.views.config_introdon import *
 from introdon.views.form import SettingForm
 
@@ -28,15 +28,14 @@ def setting_multi():
     # game_idで受付中のものがある場合(createから数秒以内で、参加人数に空きあり)
     if latest_game != None and timedelta(
             seconds=START_WAITING_TIME) > datetime.now() - latest_game.created_at and not entry_list[-1]:
-        game_logic = GameLogic()
 
         # 自分idのエントリーが無かったら、
         if user_id not in entry_list:
             # gameにユーザーを追加
-            game_logic.participate_in_game(latest_game, user_id)
+            Game.participate_in_game(latest_game, user_id)
 
         # game_idからcorrect_id、select_idを取得
-        correct_id, select_id = game_logic.fetch_songs_id(latest_game)
+        correct_id, select_id = Game.fetch_songs_id(latest_game)
 
         session['id'] = latest_game.id
         session['correct'] = correct_id
@@ -62,7 +61,6 @@ def start_multi():
         release_end = form.release_end.data
         user_id = current_user.id
 
-        song_logic = SongLogic()
         validate_make_q = None
         flash_message = ''
         correct_id = []
@@ -72,9 +70,9 @@ def start_multi():
         count_loop = 0
         while count_loop < 2:
             # クイズを作る
-            validate_make_q, flash_message, correct_id, select_id = song_logic.make_question(artist, genre,
-                                                                                             release_from,
-                                                                                             release_end)
+            validate_make_q, flash_message, correct_id, select_id = Song.make_question(artist, genre,
+                                                                                       release_from,
+                                                                                       release_end)
 
             # クイズを作れた場合
             if validate_make_q:
@@ -92,7 +90,7 @@ def start_multi():
                     term = genre
 
                 # itunesからDBに曲追加
-                song_logic.add_song(term)
+                Song.add_song(term)
                 count_loop += 1
 
             # ループ済みなら抜ける
@@ -106,8 +104,7 @@ def start_multi():
             return render_template('games/setting_multi.html', form=form)
 
         else:
-            game_logic = GameLogic()
-            game_id, game_created_at = game_logic.create_game(correct_id, select_id, user_id)
+            game_id, game_created_at = Game.create_game(correct_id, select_id, user_id)
 
             session['id'] = game_id
             session['correct'] = correct_id
@@ -148,8 +145,7 @@ def question_multi():
     selects = session['select']
 
     # クイズ用の曲をシリアライズして用意する
-    song_logic = SongLogic()
-    correct_song, select_songs = song_logic.dump_question_song(correct, selects, num)
+    correct_song, select_songs = Song.dump_question_song(correct, selects, num)
 
     session['correct_song'] = correct_song
     game = {
@@ -175,12 +171,10 @@ def record_log_multi():
     if current_user.is_authenticated:
         user_id = current_user.id
 
-    log_logic = LogLogic()
-    judge, score = log_logic.create_log(user_id, game_id, num, correct, answer, is_multi=True)
+    judge, score = Log.create_log(user_id, game_id, num, correct, answer, is_multi=True)
 
     # UserDBにスコアをupdate
-    user_logic = UserLogic()
-    user_logic.add_record_to_user(judge, user_id, num, score)
+    User.add_record_to_user(judge, user_id, num, score)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
@@ -211,23 +205,19 @@ def result_multi():
     game_instance = Game.query.filter(Game.id == game_id).first()
 
     # 正解曲の内容を出力
-    song_logic = SongLogic()
-    correct_song_list = song_logic.dump_correct_songs_list(correct_songs)
+    correct_song_list = Song.dump_correct_songs_list(correct_songs)
 
     # 参加したuserのidを取得
-    game_logic = GameLogic()
-    users_id_list = game_logic.fetch_users_id(game_instance)
+    users_id_list = Game.fetch_users_id(game_instance)
 
     # ユーザーごとの得点を集計
-    log_logic = LogLogic()
-    order_score = log_logic.calc_score(game_id, users_id_list)
+    order_score = Log.calc_score(game_id, users_id_list)
 
     # 発表用にユーザー名と得点を対応させる
-    user_logic = UserLogic()
-    display_rank = user_logic.bind_name_score(users_id_list, order_score)
+    display_rank = User.bind_name_score(users_id_list, order_score)
 
     # Gameのゴールド、シルバー、ブロンズ内容をupdate
-    game_logic.update_game(order_score, game_instance)
+    Game.update_game(order_score, game_instance)
 
     game = {
         'judge': session['judge'],
@@ -261,13 +251,11 @@ def setting_game():
         release_from = form.release_from.data
         release_end = form.release_end.data
 
-        song_logic = SongLogic()
-        validate_make_q, flash_message, correct_id, select_id = song_logic.make_question(artist, genre, release_from,
-                                                                                         release_end)
+        validate_make_q, flash_message, correct_id, select_id = Song.make_question(artist, genre, release_from,
+                                                                                   release_end)
 
         if validate_make_q:
-            game_logic = GameLogic()
-            game_id, game_created_at = game_logic.create_game(correct_id, select_id, user_id)
+            game_id, game_created_at = Game.create_game(correct_id, select_id, user_id)
 
             session['num'] = 1
             session['answer'] = []
@@ -295,8 +283,7 @@ def question():
     selects = session['select']
 
     # クイズ用の曲をシリアライズして用意する
-    song_logic = SongLogic()
-    correct_song, select_songs = song_logic.dump_question_song(correct, selects, num)
+    correct_song, select_songs = Song.dump_question_song(correct, selects, num)
 
     session['correct_song'] = correct_song
     game = {
@@ -318,12 +305,10 @@ def record_log():
     if current_user.is_authenticated:
         user_id = current_user.id
 
-    log_logic = LogLogic()
-    judge, score = log_logic.create_log(user_id, game_id, num, correct, answer)
+    judge, score = Log.create_log(user_id, game_id, num, correct, answer)
 
     # UserDBにスコアをupdate
-    user_logic = UserLogic()
-    user_logic.add_record_to_user(judge, user_id, num, score)
+    User.add_record_to_user(judge, user_id, num, score)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
@@ -346,8 +331,7 @@ def answer():
 def result():
     # 正解曲の内容をダンプ
     correct_songs = session['correct']
-    song_logic = SongLogic()
-    correct_song_list = song_logic.dump_correct_songs_list(correct_songs)
+    correct_song_list = Song.dump_correct_songs_list(correct_songs)
 
     game = {
         'judge': session['judge'],
@@ -360,13 +344,12 @@ def result():
 
 @app.route('/game/participating_members')
 def participating_members():
+    # start_multi.htmlでユーザーの参加状態監視に使用
     game_id = int(request.args.get('game_id'))
-    game_logic = GameLogic()
 
     game_instance = Game.query.filter(Game.id == game_id).first()
-    users_id_list = game_logic.fetch_users_id(game_instance)
+    users_id_list = Game.fetch_users_id(game_instance)
 
-    user_logic = UserLogic()
-    users_record_list = user_logic.fetch_user_records(users_id_list)
+    users_record_list = User.fetch_user_records(users_id_list)
 
     return jsonify(users_record_list)

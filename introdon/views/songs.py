@@ -1,9 +1,7 @@
 from flask import request, redirect, flash
 
-from flask import request, redirect, flash
-
 from introdon import app
-from introdon.models.songs import SongLogic
+from introdon.models.songs import Song
 
 
 # song登録画面
@@ -13,8 +11,7 @@ def add_song():
     limit = request.form['limit']
     attribute = request.form['attribute']
 
-    song_logic = SongLogic()
-    validate, _status_code = song_logic.add_song(term, attribute, limit)
+    validate, _status_code = Song.add_song(term, attribute, limit)
 
     if validate:
         flash('新曲が登録されました')

@@ -34,14 +34,17 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<Entry id:{} username:{}>'.format(self.id, self.username)
 
-
-class UserLogic():
-    def bind_name_score(self, users_id_list, order_score) -> list:
+    @classmethod
+    def bind_name_score(cls, users_id_list: list, order_score: list) -> list:
         """Usernameとscoreをセットにする
 
-        scoreが高い順にソートしたリストを返す
-        :rtype: list
+        scoreが高い順にソートして、ユーザー名とマッピングしたリストを返す
+
+        ----------
+        :param users_id_list: 参加ユーザーのIDリスト
+        :param order_score: ユーザーIDとスコア合計のマッピングリスト
         """
+
         user_id_name = User.query.with_entities(User.id, User.username).filter(User.id.in_(users_id_list)).order_by(
             User.id).all()
         display_rank = {name: value for id, name in user_id_name for id2, value in order_score if id == id2}
@@ -49,12 +52,17 @@ class UserLogic():
 
         return display_rank
 
-    def add_record_to_user(self, judge: int, user_id: int, num: int, score: int) -> bool:
+    @classmethod
+    def add_record_to_user(cls, judge: int, user_id: int, num: int, score: int) -> bool:
         """logの成績をユーザーに追加する
 
         Userの得点、ゲーム数、回答数、正解数、正解率を追加変更する
 
         ----------
+        :param judge: 正解したか
+        :param user_id: ユーザーID
+        :param num: 何問目
+        :param score: 獲得スコア
         :return: bool
         """
 
@@ -84,14 +92,17 @@ class UserLogic():
                 validate = True
             except:
                 db.session.rollback()
-                raise
 
         return validate
 
-    def fetch_user_records(self, users_id_list: list) -> list:
+    @classmethod
+    def fetch_user_records(cls, users_id_list: list) -> list:
         """ユーザーの累積成績を返す
 
         user_idリストを渡すと、各ユーザーの成績をlistにして返す
+
+        ----------
+        :param users_id_list: ユーザーIDリスト
         """
 
         users_record_list = User.query.with_entities(

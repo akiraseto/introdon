@@ -15,6 +15,7 @@ class Log(db.Model):
     select_song_id = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
+
     def __init__(self, game_id, question_num, judge, correct_song_id, select_song_id, user_id=None, score=0):
         self.user_id = user_id
         self.game_id = game_id
@@ -30,9 +31,8 @@ class Log(db.Model):
                                                                                      self.question_num, self.user_id,
                                                                                      self.score)
 
-
-class LogLogic:
-    def create_log(self, user_id: int, game_id: int, num: int, correct: int, answer: int, is_multi=False) -> tuple:
+    @classmethod
+    def create_log(cls, user_id: int, game_id: int, num: int, correct: int, answer: int, is_multi=False) -> tuple:
         """logをDBに保存
 
          1人プレイ、マルチプレイ切り分けて点数を付与の上、DBにログを保存
@@ -84,17 +84,22 @@ class LogLogic:
             db.session.commit()
         except:
             db.session.rollback()
-            raise
         finally:
             db.session.close()
 
         return judge, score
 
-    def calc_score(self, game_id: int, users_id_list: list):
+    @classmethod
+    def calc_score(cls, game_id: int, users_id_list: list) -> list:
         """ユーザーごとに得点を集計
 
-        集計した得点をuser_idとセットにしてdictで返す
+        集計した得点をuser_idとタプルにしてユーザーごとのリストにして返す
+
+        ----------
+        :param game_id: ゲームID
+        :param users_id_list: ユーザーのIDリスト
         """
+
         score_dict = {}
         for game_user in users_id_list:
             score_dict[game_user] = 0

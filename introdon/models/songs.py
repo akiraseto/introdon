@@ -36,9 +36,17 @@ class Song(db.Model):
     def __repr__(self):
         return '<Entry id:{} track:{} artist:{}>'.format(self.id, self.track, self.artist)
 
+    @classmethod
+    def make_question(cls, artist: str, genre: str, release_from: str, release_end: str):
+        """10曲集めて問題を作成する
 
-class SongLogic():
-    def make_question(self, artist, genre, release_from, release_end):
+        ----------
+        :param artist: アーティスト名
+        :param genre: ジャンル
+        :param release_from: リリース開始
+        :param release_end: リリース終了
+        """
+
         validate = True
         flash_message = ''
         correct_id = []
@@ -88,19 +96,30 @@ class SongLogic():
 
         return validate, flash_message, correct_id, select_id
 
+    @classmethod
+    def dump_question_song(cls, correct: list, selects: list, num: int) -> tuple:
+        """問題ごとに曲をシリアライズしてダンプする
 
-    def dump_question_song(self, correct, selects, num):
+         ----------
+        :param correct: 正解曲のリスト
+        :param selects: 選択曲のリスト
+        :param num: 出題ナンバー
+        """
+
         song_schema = SongSchema()
         correct_song = song_schema.dump(Song.query.filter(Song.id == correct[num - 1]).first())
         select_songs = song_schema.dump(Song.query.filter(Song.id.in_(selects[num - 1])).all(), many=True)
 
         return correct_song, select_songs
 
-
-    def dump_correct_songs_list(self, correct_songs):
+    @classmethod
+    def dump_correct_songs_list(cls, correct_songs: list) -> list:
         """正解曲の内容を出力
 
          正解曲をシリアライズしてリストにして返す
+
+         ----------
+         :param correct_songs: 正解曲のIDリスト
         """
         correct_song_list = Song.query.filter(Song.id.in_(correct_songs)).all()
         correct_song_list = [next(s for s in correct_song_list if s.id == id) for id in correct_songs]
@@ -110,8 +129,18 @@ class SongLogic():
 
         return correct_song_list
 
+    @classmethod
+    def add_song(cls, term: str, attribute: str = None, limit: int = 50) -> tuple:
+        """API検索して曲を登録する
 
-    def add_song(self, term, attribute=None, limit=50):
+        検索ワードから楽曲をITUNES_APIでjson取得してSong_DBに登録する
+
+        ----------
+        :param term: 検索条件(アーティスト、ジャンル)
+        :param attribute: 検索項目(アーティスト名、曲名)
+        :param limit: レスポンス曲数
+        """
+
         params = {
             'media': 'music',
             'country': 'jp',
@@ -164,7 +193,6 @@ class SongLogic():
                 validate = True
             except:
                 db.session.rollback()
-                raise
 
         return validate, status_code
 
