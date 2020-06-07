@@ -8,7 +8,7 @@ from introdon import app
 from introdon.models.games import Game, GameLogic
 from introdon.models.logs import LogLogic
 from introdon.models.songs import Song
-from introdon.models.users import UserLogic
+from introdon.models.users import User
 from introdon.views.config_introdon import *
 from introdon.views.form import SettingForm
 
@@ -177,8 +177,7 @@ def record_log_multi():
     judge, score = log_logic.create_log(user_id, game_id, num, correct, answer, is_multi=True)
 
     # UserDBにスコアをupdate
-    user_logic = UserLogic()
-    user_logic.add_record_to_user(judge, user_id, num, score)
+    User.add_record_to_user(judge, user_id, num, score)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
@@ -220,8 +219,7 @@ def result_multi():
     order_score = log_logic.calc_score(game_id, users_id_list)
 
     # 発表用にユーザー名と得点を対応させる
-    user_logic = UserLogic()
-    display_rank = user_logic.bind_name_score(users_id_list, order_score)
+    display_rank = User.bind_name_score(users_id_list, order_score)
 
     # Gameのゴールド、シルバー、ブロンズ内容をupdate
     game_logic.update_game(order_score, game_instance)
@@ -317,8 +315,7 @@ def record_log():
     judge, score = log_logic.create_log(user_id, game_id, num, correct, answer)
 
     # UserDBにスコアをupdate
-    user_logic = UserLogic()
-    user_logic.add_record_to_user(judge, user_id, num, score)
+    User.add_record_to_user(judge, user_id, num, score)
 
     session['answer'].append(answer)
     session['judge'].append(judge)
@@ -354,13 +351,13 @@ def result():
 
 @app.route('/game/participating_members')
 def participating_members():
+    # start_multi.htmlでユーザーの参加状態監視に使用
     game_id = int(request.args.get('game_id'))
     game_logic = GameLogic()
 
     game_instance = Game.query.filter(Game.id == game_id).first()
     users_id_list = game_logic.fetch_users_id(game_instance)
 
-    user_logic = UserLogic()
-    users_record_list = user_logic.fetch_user_records(users_id_list)
+    users_record_list = User.fetch_user_records(users_id_list)
 
     return jsonify(users_record_list)
