@@ -130,7 +130,7 @@ class Song(db.Model):
         return correct_song_list
 
     @classmethod
-    def add_song(cls, term: str, attribute: str = None, limit: int = 50) -> tuple:
+    def add_song(cls, term: str, attribute: str = None, limit: int = 100) -> tuple:
         """API検索して曲を登録する
 
         検索ワードから楽曲をITUNES_APIでjson取得してSong_DBに登録する

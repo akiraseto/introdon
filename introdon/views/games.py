@@ -55,11 +55,11 @@ def start_multi():
     # 1人目ならgameを作る
     if session['creatable']:
         form = SettingForm()
+        user_id = current_user.id
         artist = form.artist.data
         genre = form.genre.data
         release_from = form.release_from.data
         release_end = form.release_end.data
-        user_id = current_user.id
 
         validate_make_q = None
         flash_message = ''
@@ -238,23 +238,63 @@ def failure_multi():
 @app.route('/game/setting', methods=['GET', 'POST'])
 def setting_game():
     form = SettingForm()
-    user_id = None
-    if current_user.is_authenticated:
-        user_id = current_user.id
 
     if request.method != 'POST':
         return render_template('games/setting.html', form=form)
 
     else:
+        user_id = None
+        if current_user.is_authenticated:
+            user_id = current_user.id
+
         artist = form.artist.data
         genre = form.genre.data
         release_from = form.release_from.data
         release_end = form.release_end.data
 
-        validate_make_q, flash_message, correct_id, select_id = Song.make_question(artist, genre, release_from,
-                                                                                   release_end)
+        validate_make_q = None
+        flash_message = ''
+        correct_id = []
+        select_id = []
 
-        if validate_make_q:
+        # 1度ループ 曲チェック=>追加のため
+        count_loop = 0
+        while count_loop < 2:
+            # クイズを作る
+            validate_make_q, flash_message, correct_id, select_id = Song.make_question(artist, genre,
+                                                                                       release_from,
+                                                                                       release_end)
+
+            # クイズを作れた場合
+            if validate_make_q:
+                break
+
+            # クイズを作れない場合
+            # ループ 初回
+            if count_loop < 1:
+                term = ''
+                if artist and genre:
+                    term = artist + "+" + genre
+                elif artist and not genre:
+                    term = artist
+                elif not artist and genre:
+                    term = genre
+
+                # itunesからDBに曲追加
+                Song.add_song(term)
+                count_loop += 1
+
+            # ループ済みなら抜ける
+            else:
+                break
+
+        # ループ後
+        # クイズが作れなかった場合
+        if not validate_make_q:
+            flash(flash_message)
+            return render_template('games/setting.html', form=form)
+
+        else:
             game_id, game_created_at = Game.create_game(correct_id, select_id, user_id)
 
             session['num'] = 1
@@ -265,9 +305,6 @@ def setting_game():
             session['select'] = select_id
             session['correct_song'] = {}
             session['created_timestamp'] = None
-        else:
-            flash(flash_message)
-            return render_template('games/setting.html', form=form)
 
         return redirect(url_for('question'))
 
