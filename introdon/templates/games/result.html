@@ -18,24 +18,28 @@
         <h2>正解数 {{ count_judge }} /10問</h2>
 
         <div class="row">
-          <div v-for="(song, index) in correct_song_list" class="col-sm-3 my-1">
+          <div v-for="(song, index) in correct_song_list" class="col-12 col-sm-3 my-1">
 
             <div class="card h-100 btn-outline-secondary" v-on:click="songSound(song.preview)">
-              <div class="card-header">
-                <h4>第{{ index + 1 }}問</h4>
-                <div v-if="judge_list[index] === 1">
-                  <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+              <div class="row no-gutters">
+                <div class="card-header col-3 col-sm-12">
+                  <h4>第{{ index + 1 }}問</h4>
+                  <div class="mt-4 mt-sm-0">
+                    <span v-if="judge_list[index] === 1">
+                      <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+                    </span>
+                    <span v-else>
+                      <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
+                    </span>
+                  </div>
                 </div>
-                <div v-else>
-                  <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
-                </div>
-              </div>
 
-              <div class="card-body">
-                <h5>{{ song.artist }}</h5>
-                <br>
-                <h6>{{ song.track }}</h6>
-                <img alt="jacket_img" class="rounded float-center" v-bind:src="song.jacket_img">
+                <div class="card-body col-9 col-sm-12">
+                  <h5 class="text-truncate">{{ song.artist }}</h5>
+                  <br class="d-sm-inline d-none"/>
+                  <h6>{{ song.track }}</h6>
+                  <img alt="jacket_img" class="rounded float-center" v-bind:src="song.jacket_img">
+                </div>
               </div>
             </div>
 
