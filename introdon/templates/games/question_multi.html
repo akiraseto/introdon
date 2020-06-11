@@ -18,6 +18,13 @@
         <h2>あと<span class="text-danger">{{ remained_time | displayZero }}</span>秒</h2>
       </div>
 
+      <div v-if="agent_sp" class="row justify-content-center my-3">
+        <button v-on:click="spSound" class="btn btn-info col-11 btn-lg">
+          <span v-if="click_times % 2 === 0">音楽を再生♪</span>
+          <span v-if="click_times % 2 === 1">停止</span>
+        </button>
+      </div>
+
       <div>
         <form v-bind:action="record_log_multi" class="" method=post>
           <div class="row">
@@ -60,7 +67,10 @@
           sound_effect_url: "{{ url_for('static', filename='question.mp3') }}",
           display_time: {{ game.DISPLAY_TIME }},
           limit_time: {{ game.limit_time}},
-          remained_time: this.limit_time
+          remained_time: this.limit_time,
+          agent_sp: false,
+          click_times: 0,
+          audio: null
         }
       },
       methods: {
@@ -87,14 +97,37 @@
         },
 
         songSound: async function () {
-          const audio = new Audio(this.correct_song.preview + "#t=3,30");
-          await this.sleep(2000)
-          audio.play();
+          if (this.click_times % 2 === 0) {
+            this.audio = new Audio(this.correct_song.preview + "#t=3,30");
+            await this.sleep(2000)
+            this.audio.play();
+          } else {
+            console.log('音楽停止');
+            this.audio.pause()
+          }
         },
 
         soundEffect: function () {
-          let audio = new Audio(this.sound_effect_url);
-          audio.play();
+          if (this.click_times === 0) {
+            let audio = new Audio(this.sound_effect_url);
+            audio.play();
+          }
+        },
+
+        chkAgent: function () {
+          if (navigator.userAgent.match(/(iPhone|iPad|iPod|Android.*Mobile)/i)) {
+            console.log('sp');
+            this.agent_sp = true
+          } else {
+            console.log('pc');
+            this.agent_sp = false
+          }
+        },
+
+        spSound: function () {
+          this.soundEffect(this.click_times)
+          this.songSound(this.click_times)
+          this.click_times += 1
         }
 
       },
@@ -112,6 +145,7 @@
         this.countDown()
         this.soundEffect()
         this.songSound()
+        this.chkAgent()
       },
     });
 

@@ -37,6 +37,11 @@
       <div class="mt-2 alert alert-dismissable bg-dark">
         <h5 class="text-light">ゲーム説明</h5>
         <ul class="list-group">
+          <li v-if="agent_sp" class="list-group-item">
+            スマホ/パッド端末で参加の方は、
+            <span class="text-danger">問題ごとに再生ボタンを押してください。</span>
+            <small>(ブラウザポリシーにより音声自動再生は禁止のため)</small>
+          </li>
           <li class="list-group-item">最大5人参加の早押し曲当てクイズ</li>
           <li class="list-group-item">全部で10問</li>
           <li class="list-group-item">スコアを多く取とったユーザーが勝利</li>
@@ -66,7 +71,8 @@
           game_id: {{ game.game_id }},
           display_time: {{ game.DISPLAY_TIME }},
           limit_time: {{ game.limit_time}},
-          remained_time: this.limit_time
+          remained_time: this.limit_time,
+          agent_sp: false,
         }
       },
       methods: {
@@ -114,7 +120,18 @@
           let audio = new Audio(this.timer_sound_url);
           audio.loop = true;
           audio.play();
-        }
+        },
+
+        chkAgent: function () {
+          if (navigator.userAgent.match(/(iPhone|iPad|iPod|Android.*Mobile)/i)) {
+            console.log('sp');
+            this.agent_sp = true
+          } else {
+            console.log('pc');
+            this.agent_sp = false
+          }
+        },
+
       },
       computed: {
         numOfTime: function () {
@@ -134,6 +151,7 @@
         this.countDown()
         this.getMember()
         this.timerSound()
+        this.chkAgent()
       },
     });
 
