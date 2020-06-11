@@ -59,10 +59,10 @@
                   <div class="mt-4 mt-sm-0">
 
                     <span v-if="judge_list[index] === 1">
-                      <i class="far fa-circle fa-5x fa-fw icon-correct"></i>
+                      <i class="far fa-circle fa-5x icon-correct"></i>
                     </span>
                     <span v-else>
-                      <i class="fas fa-times fa-5x fa-fw icon-wrong"></i>
+                      <i class="fas fa-times fa-5x icon-wrong"></i>
                     </span>
                   </div>
                 </div>
@@ -81,10 +81,11 @@
         </div>
 
         <div class="row justify-content-center m-3">
-          <button class="btn btn-primary col-sm-3 m-2" v-bind:onclick="'location.href=\'' + setting_multi + '\''">
+          <button class="btn btn-primary col-10 col-sm-3 m-2"
+                  v-bind:onclick="'location.href=\'' + setting_multi + '\''">
             もう一度遊ぶ
           </button>
-          <button class="btn btn-primary col-sm-3 m-2" v-bind:onclick="'location.href=\'' + index_url + '\''">やめる
+          <button class="btn btn-primary col-10 col-sm-3 m-2" v-bind:onclick="'location.href=\'' + index_url + '\''">やめる
           </button>
         </div>
 

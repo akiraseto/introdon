@@ -1,4 +1,4 @@
-from flask import redirect, url_for
+from flask import redirect, url_for, flash
 from flask_admin import Admin, expose, AdminIndexView, BaseView
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.form import SecureForm
@@ -84,5 +84,18 @@ admin.add_view(
 
 
 @app.errorhandler(404)
-def non_existant_route(error):
+def not_exist_route(error):
+    flash('Page not found')
+    return redirect(url_for('index'))
+
+
+@app.errorhandler(401)
+def unauthorized_error(error):
+    flash('Unauthorized error')
+    return redirect(url_for('index'))
+
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    flash('Internal server error')
     return redirect(url_for('index'))

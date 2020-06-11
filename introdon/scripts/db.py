@@ -4,7 +4,7 @@ from introdon import db
 
 
 class InitDB(Command):
-    "create database"
+    """create database"""
 
     def run(self):
         db.create_all()
