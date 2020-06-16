@@ -14,3 +14,5 @@ https://itunes.apple.com/search
 sqlalcemmyが必要とする
 conda install pymysql
 
+# docker-compose up 後に containerにattachする
+docker exec -it ID_OR_NAME bash

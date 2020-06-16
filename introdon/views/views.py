@@ -85,7 +85,7 @@ admin.add_view(
 
 @app.errorhandler(404)
 def not_exist_route(error):
-    flash('Page not found')
+    # flash('Page not found')
     return redirect(url_for('index'))
 
 
