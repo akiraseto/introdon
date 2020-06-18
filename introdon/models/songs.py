@@ -1,4 +1,5 @@
 import random
+import traceback
 from datetime import datetime
 
 import requests
@@ -187,12 +188,18 @@ class Song(db.Model):
                     )
                     items.append(item)
 
-            db.session.add_all(items)
+            # セッションオブジェクトを期限切れにしない
+            song_session = db.session()
+            song_session.expire_on_commit = False
+            song_session.add_all(items)
             try:
-                db.session.commit()
+                song_session.commit()
                 validate = True
             except:
-                db.session.rollback()
+                song_session.rollback()
+                traceback.print_exc()
+            finally:
+                song_session.close()
 
         return validate, status_code
 

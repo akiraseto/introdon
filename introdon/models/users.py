@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 
 from flask_login import UserMixin
@@ -92,6 +93,7 @@ class User(UserMixin, db.Model):
                 validate = True
             except:
                 db.session.rollback()
+                traceback.print_exc()
 
         return validate
 

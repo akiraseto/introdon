@@ -22,6 +22,11 @@ def setting_multi():
     user_id = current_user.id
 
     latest_game = Game.query.order_by(Game.id.desc()).first()
+
+    # アプリでゲーム登録が初めての場合
+    if not latest_game:
+        return render_template('games/setting_multi.html', form=form)
+
     entry_list = [latest_game.entry_user1, latest_game.entry_user2, latest_game.entry_user3, latest_game.entry_user4,
                   latest_game.entry_user5]
 

@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 
 from introdon import db
@@ -84,6 +85,8 @@ class Log(db.Model):
             db.session.commit()
         except:
             db.session.rollback()
+            traceback.print_exc()
+
         finally:
             db.session.close()
 

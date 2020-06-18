@@ -1,0 +1,51 @@
+version: "3"
+
+services:
+  nginx:
+    build: nginx
+    container_name: nginx
+    ports:
+      - "80:8080"
+    volumes:
+      - ./nginx/config/nginx.conf:/etc/nginx/nginx.conf
+      - /tmp/nginx_log:/var/log/nginx
+    depends_on:
+      - flask
+    networks:
+      - front
+
+  flask:
+    build: .
+    container_name: flask
+    environment:
+      ENV: PROD
+    #      ENV: DEV
+    volumes:
+      - .:/introdon
+    depends_on:
+      - db
+    networks:
+      - front
+      - back
+    expose:
+      - 5000
+
+  db:
+    build: db
+    container_name: mariadb
+    ports:
+      - "53306:3306"
+    networks:
+      - back
+    environment:
+      MYSQL_DATABASE: introdon
+    env_file: ./db/envfile #passwordは別ファイルでignore
+
+networks:
+  front:
+    driver: bridge
+  back:
+    driver: bridge
+
+#todo:log containerを建ててlogを集約する
+#todo:dbのデータ永続化を実装する

@@ -1,3 +1,4 @@
+import traceback
 from datetime import datetime
 
 from introdon import db
@@ -224,6 +225,7 @@ class Game(db.Model):
             db.session.commit()
         except:
             db.session.rollback()
+            traceback.print_exc()
 
         return this_game.id, this_game.created_at
 
@@ -270,6 +272,7 @@ class Game(db.Model):
             db.session.commit()
         except:
             db.session.rollback()
+            traceback.print_exc()
 
     @classmethod
     def participate_in_game(cls, latest_game: object, user_id: int) -> None:
@@ -293,6 +296,7 @@ class Game(db.Model):
             db.session.commit()
         except:
             db.session.rollback()
+            traceback.print_exc()
 
     @classmethod
     def fetch_songs_id(cls, latest_game: object) -> tuple:
