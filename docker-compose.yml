@@ -5,10 +5,10 @@ services:
     build: nginx
     container_name: nginx
     ports:
-      - "80:8080"
+      - "80:80"
     volumes:
-      - ./nginx/config/nginx.conf:/etc/nginx/nginx.conf
-      - /tmp/nginx_log:/var/log/nginx
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker_data/log/nginx:/var/log/nginx
     depends_on:
       - flask
     networks:
@@ -18,10 +18,12 @@ services:
     build: .
     container_name: flask
     environment:
+      # PROD, TEST, DEV
       ENV: PROD
-    #      ENV: DEV
     volumes:
       - .:/introdon
+      - ./docker_data/log/flask/gunicorn_access.log:/var/log/gunicorn_access.log
+      - ./docker_data/log/flask/gunicorn_error.log:/var/log/gunicorn_error.log
     depends_on:
       - db
     networks:
@@ -35,17 +37,18 @@ services:
     container_name: mariadb
     ports:
       - "53306:3306"
+    volumes:
+      - ./db/my.conf:/etc/mysql/conf.d/my.cnf
+      - ./docker_data/mysql:/var/lib/mysql
+      - ./docker_data/log/mysql:/var/log/mysql
     networks:
       - back
     environment:
       MYSQL_DATABASE: introdon
-    env_file: ./db/envfile #passwordは別ファイルでignore
+    env_file: ./db/envfile #password記載のためignore
 
 networks:
   front:
     driver: bridge
   back:
     driver: bridge
-
-#todo:log containerを建ててlogを集約する
-#todo:dbのデータ永続化を実装する
