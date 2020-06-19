@@ -52,5 +52,3 @@ networks:
     driver: bridge
   back:
     driver: bridge
-
-#todo:log containerを建ててlogを集約する

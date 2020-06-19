@@ -18,6 +18,7 @@ requests = "*"
 flask-wtf = "*"
 gunicorn = "*"
 python-dotenv = "*"
+flask-debugtoolbar = "*"
 
 [requires]
 python_version = "3.8"
