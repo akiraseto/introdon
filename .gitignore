@@ -129,6 +129,5 @@ dmypy.json
 .pyre/
 /.idea/
 
-introdon/config.py
 /db/envfile
 /docker_data/
