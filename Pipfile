@@ -19,6 +19,12 @@ flask-wtf = "*"
 gunicorn = "*"
 python-dotenv = "*"
 flask-debugtoolbar = "*"
+pytest = "*"
+pytest-flask = "*"
+pytest-mock = "*"
+pytest-coverage = "*"
+pytest-emoji = "*"
+pytest-codestyle = "*"
 
 [requires]
 python_version = "3.8"

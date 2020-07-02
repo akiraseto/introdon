@@ -19,16 +19,18 @@ services:
     container_name: flask
     environment:
       # PROD, TEST, DEV
-      ENV: PROD
+      ENV: TEST
     volumes:
       - .:/introdon
       - ./docker_data/log/flask/gunicorn_access.log:/var/log/gunicorn_access.log
       - ./docker_data/log/flask/gunicorn_error.log:/var/log/gunicorn_error.log
     depends_on:
       - db
+      - db_test
     networks:
       - front
       - back
+      - test
     expose:
       - 5000
 
@@ -47,8 +49,23 @@ services:
       MYSQL_DATABASE: introdon
     env_file: ./db/envfile #password記載のためignore
 
+  db_test:
+    build: db
+    container_name: mariadb_test
+    ports:
+      - "63306:3306"
+    volumes:
+      - ./db/my.conf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - test
+    environment:
+      MYSQL_DATABASE: introdon_test
+    env_file: ./db/envfile #password記載のためignore
+
 networks:
   front:
     driver: bridge
   back:
+    driver: bridge
+  test:
     driver: bridge
