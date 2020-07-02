@@ -11,7 +11,7 @@ from introdon.scripts.db import InitDB
 # todo:pytest-codestyle
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def client():
     # 環境変数がTESTでないなら、エラー起こして止める
     if os.environ['ENV'] != 'TEST':
@@ -19,13 +19,14 @@ def client():
 
     # form.validate_on_submit()解除に必要
     introdon.app.config['WTF_CSRF_ENABLED'] = False
-    introdon.app.config['DEBUG'] = True
     introdon.app.config['TESTING'] = True
 
-    # 全部消す
+    # データ全消去
     introdon.db.drop_all()
+    # Tableの初期化
     InitDB().run()
 
+    # テストDATAのインサート
     for line in open('tests/sql/introdon_users.sql'):
         introdon.db.session.execute(line)
 
@@ -43,39 +44,3 @@ def client():
             yield client
 
     introdon.db.session.close()
-
-
-def login(client, username, password):
-    return client.post('/', data=dict(
-        username=username,
-        password=password
-    ), follow_redirects=True)
-
-
-def create_user(client, username, password):
-    return client.post('/user/new', data=dict(
-        username=username,
-        password=password
-    ), follow_redirects=True)
-
-
-def logout(client):
-    return client.get('/logout', follow_redirects=True)
-
-
-def test_admin_login_logout(client):
-    rv = login(client, '1111', '1111')
-    assert '管理画面'.encode() in rv.data
-
-    rv = logout(client)
-    assert 'ログアウトしました'.encode() in rv.data
-
-
-def test_login(client):
-    rv = login(client, '2222', '2222')
-    assert '参加ゲーム数'.encode() in rv.data
-
-
-def test_create_user(client):
-    rv = create_user(client, 'hansolo', 'leiaorgana')
-    assert '登録されました!'.encode() in rv.data
