@@ -26,10 +26,8 @@ jobs:
       - run:
           name: run tests
           command: |
-                     export FLASK_ENV=TEST
-            #            pytest -m 'use_mock' --junitxml=test-reports/junit.xml $(circleci tests glob tests/**/test_*.py | circleci tests split)
-                     pytest -m 'use_mock' ./tests/unit/test_units.py
-
+            export FLASK_ENV=TEST
+            pytest -m 'use_mock' ./tests/unit/test_units.py
       - store_test_results:
           path: test-reports
 
