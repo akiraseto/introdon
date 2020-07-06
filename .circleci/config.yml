@@ -27,9 +27,9 @@ jobs:
           name: run tests
           command: |
             export FLASK_ENV=TEST
-            export MYSQL_USER=HOGE
-            export MYSQL_PASSWORD=FUGA
-            pytest -m 'use_mock' ./tests/unit/test_units.py
+            export MYSQL_USER=dummy
+            export MYSQL_PASSWORD=dummy
+            pytest -m 'use_mock' --junitxml=test-reports/junit.xml $(circleci tests glob tests/**/test_*.py | circleci tests split)
       - store_test_results:
           path: test-reports
 
