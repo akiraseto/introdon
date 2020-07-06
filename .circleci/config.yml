@@ -27,6 +27,8 @@ jobs:
           name: run tests
           command: |
             export FLASK_ENV=TEST
+            export MYSQL_USER=HOGE
+            export MYSQL_PASSWORD=FUGA
             pytest -m 'use_mock' ./tests/unit/test_units.py
       - store_test_results:
           path: test-reports
