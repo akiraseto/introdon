@@ -14,11 +14,12 @@ HOST = 'mariadb'
 DB_NAME = 'introdon'
 
 # DEV環境
-if os.environ['ENV'] == 'DEV':
+if os.environ['FLASK_ENV'] == 'DEV':
     DEBUG = True
+    SQLALCHEMY_RECORD_QUERIES = True
 
 # TEST環境
-if os.environ['ENV'] == 'TEST':
+if os.environ['FLASK_ENV'] == 'TEST':
     HOST = 'mariadb_test'
     DB_NAME = 'introdon_test'
 

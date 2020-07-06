@@ -6,15 +6,10 @@ import introdon
 from introdon.scripts.db import InitDB
 
 
-# todo:pytest-flask
-# todo:pytest-coverage
-# todo:pytest-codestyle
-
-
 @pytest.fixture(scope='session')
 def client():
     # 環境変数がTESTでないなら、エラー起こして止める
-    if os.environ['ENV'] != 'TEST':
+    if os.environ['FLASK_ENV'] != 'TEST':
         raise
 
     # form.validate_on_submit()解除に必要

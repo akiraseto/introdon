@@ -20,11 +20,9 @@ gunicorn = "*"
 python-dotenv = "*"
 flask-debugtoolbar = "*"
 pytest = "*"
-pytest-flask = "*"
 pytest-mock = "*"
-pytest-coverage = "*"
 pytest-emoji = "*"
-pytest-codestyle = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.8"

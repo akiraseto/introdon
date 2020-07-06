@@ -23,3 +23,9 @@ sudo lsof -i -P | grep "LISTEN"
 # MACのapache2を停める
 sudo apachectl stop
 
+# UnitTest
+CircleCI,ローカルで直にテストする場合
+(Dockerを利用しない場合)
+OSの環境変数をセットする必要がある
+
+export FLASK_ENV=TEST && pytest -m 'use_mock'

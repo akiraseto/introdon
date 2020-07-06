@@ -18,8 +18,8 @@ services:
     build: .
     container_name: flask
     environment:
-      # PROD, TEST, DEV
-      ENV: TEST
+      # PROD, DEV, TEST
+      FLASK_ENV: PROD
     volumes:
       - .:/introdon
       - ./docker_data/log/flask/gunicorn_access.log:/var/log/gunicorn_access.log
