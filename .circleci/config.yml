@@ -1,0 +1,34 @@
+version: 2
+jobs:
+  build:
+    parallelism: 2
+    docker:
+      - image: circleci/python:3.8
+
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile" }}
+            - v1-dependencies-{{ .Branch }}
+
+      - run:
+          name: install dependencies
+          command: |
+            pip install pipenv
+            pipenv install --system
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ .Branch }}-{{ checksum "Pipfile" }}
+
+      - run:
+          name: run tests
+          command: |
+            pytest -m 'use_mock' --junitxml=test-reports/junit.xml $(circleci tests glob tests/**/test_*.py | circleci tests split)
+
+
+      - store_test_results:
+          path: test-reports
+
