@@ -14,8 +14,6 @@ from introdon.models.users import User
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-# login_viewのrouteを設定
-# login_manager.login_view = "users.login"
 
 @login_manager.user_loader
 def load_user(user_id):
